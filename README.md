@@ -1,7 +1,4 @@
 # Firmware
-Firmware for Garadget device
-
-## Intro
 Garadget is the garage door "futurizer". It allows to monitor and operate your existing garage doors from smartphones, wearables and other devices. It's inexpensive, easy to install and developer friendly. For more information please visit http://www.garadget.com
 
 The code in this repository is for the program that controls Garaget's hardware. It's C++ application similar to those created for popular Arduino boards. You are encouraged to study it, report the problems, modify it, try it with your Garadget and share.
