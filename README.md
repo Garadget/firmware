@@ -35,6 +35,7 @@ String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aot=%d
 - `aot` - alert for open timeout in seconds (0 disables, default 320 - 20min)
 - `ans` - alert for night time start in minutes from midnight (same value as ane disables, default 1320 - 10pm)
 - `ane` - alert for night time end in minutes from midnight (same value as ans disables, default 360 - 6am)
+- `tzo` - local timezone offset from UTC in hours (float). Value is used in night time alerts. Daylight saving is not supported.
 
 ### Variable: netConfig
 String `ip=%d.%d.%d.%d|snet=%d.%d.%d.%d|gway=%d.%d.%d.%d|mac=%02X:%02X:%02X:%02X:%02X:%02X|ssid=%s` where
