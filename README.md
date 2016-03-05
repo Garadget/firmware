@@ -11,7 +11,7 @@ At the core of the device is Particle Photon P1 module allowing Garadget to bene
 - [numerous developer resources](https://docs.particle.io/guide/tools-and-features/dev/)
 
 ## Communication Protocol
-Garadget communicates with the clients via Particle cloud using 
+Garadget communicates with the clients via Particle cloud by 
 - [exposing variables](https://docs.particle.io/reference/firmware/photon/#particle-variable-) to report status and configuration
 - [accepting function calls](https://docs.particle.io/reference/firmware/photon/#particle-function-) to change status and update configuration
 - [publishing events](https://docs.particle.io/reference/firmware/photon/#particle-publish-) to report status changes and send alerts
