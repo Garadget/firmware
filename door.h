@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Garagio door class implementation
  * @author Denis Grisak
- * @version 1.3
+ * @version 1.5
  */
 // $Log$
 
@@ -24,21 +24,17 @@ class c_door {
         STATE_CLOSING,
         STATE_OPENING,
         STATE_STOPPED,
+        STATE_INIT,
+        STATE_ONLINE,
+        STATE_OFFLINE,
+        STATE_CONFIG,
         STATE_UNKNOWN
-    };
-
-    enum connState {
-        STATE_INITIAL,
-        STATE_DISCONNECTED,
-        STATE_CONNECTING,
-        STATE_CONNECTED,
     };
 
 protected:
     char s_doorStatus[MAXVARSIZE];
     char s_netConfig[MAXVARSIZE];
-    long n_lastEvent = 0;
-    connState n_connState = STATE_INITIAL;
+    long n_lastEvent;
     doorState n_doorState = STATE_OPEN;
     uint8_t n_relayClicksLeft;
     bool b_alertFiredTimeout = false;
@@ -56,7 +52,9 @@ protected:
     void f_relayOff();
     doorState f_translateState(String s_state);
     String f_translateState(doorState n_state);
+    void f_publishEvent(doorState n_event);
     void f_publishState();
+    void f_publishAlert(const char* s_type, const char* s_data);
     bool f_prepNetConfig();
     void f_prepStatus();
     void f_formatTime(uint32_t n_time, char* s_time);

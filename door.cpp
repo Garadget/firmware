@@ -3,7 +3,7 @@
  * @file door.cpp
  * @brief Garagio door class implementation
  * @author Denis Grisak
- * @version 1.3
+ * @version 1.5
  */
 // $Log$
 
@@ -23,23 +23,19 @@ c_door::c_door() {
     );
 
     // configure timers
-    n_lastEvent = Time.now();
-    Time.zone(o_config->a_config.values.n_timeZone);
     o_scanTimeout->f_setDuration(&o_config->a_config.values.n_readTime);
     o_motionTimeout->f_setDuration(&o_config->a_config.values.n_motionTime);
     o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
     o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
 
     // configure variables
+    Time.zone(o_config->a_config.values.n_timeZone);
+    n_lastEvent = Time.now();
     f_prepStatus();
     f_prepNetConfig();
     Particle.variable("doorStatus", s_doorStatus, STRING);
     Particle.variable("netConfig", s_netConfig, STRING);
-
-    #ifdef APPDEBUG
-        Serial.println("Initialized");
-    #endif
-    Particle.publish("state", "init", 60, PRIVATE);
+    f_publishEvent(STATE_INIT);
 }
 
 /**
@@ -86,12 +82,7 @@ void c_door::f_processAlertTimeout() {
 
   char s_time[10];
   f_formatTime(n_time, s_time);
-
-  #ifdef APPDEBUG
-      Serial.print("Timeout alert fired after: ");
-      Serial.println(s_time);
-  #endif
-  Particle.publish("timeout", s_time, 60, PRIVATE);
+  f_publishAlert("timeout", s_time);
   b_alertFiredTimeout = true;
 }
 
@@ -115,14 +106,9 @@ void c_door::f_processAlertNight() {
   if (n_start < n_end && (n_time < n_start || n_time > n_end))
     return;
 
-  char s_time[6];
-  sprintf(s_time, "%u:%u", Time.hour(), Time.minute());
-
-  #ifdef APPDEBUG
-      Serial.print("Night alert fired after: ");
-      Serial.println(s_time);
-  #endif
-  Particle.publish("night", s_time, 60, PRIVATE);
+  char s_time[10];
+  sprintf(s_time, "%u-%u", n_start, n_end);
+  f_publishAlert("night", s_time);
   b_alertFiredNight = true;
 }
 
@@ -207,6 +193,10 @@ String c_door::f_translateState(doorState n_state) {
       return "opening";
     case STATE_STOPPED:
       return "stopped";
+    case STATE_CONFIG:
+      return "configured";
+    case STATE_INIT:
+      return "initialized";
     default:
       return "unknown";
   }
@@ -345,16 +335,39 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
 }
 
 /**
- * Publishes updated state to cloud
+ * Publishes given state to the cloud
+ */
+void c_door::f_publishEvent(doorState n_event) {
+  String s_event = f_translateState(n_event);
+  #ifdef APPDEBUG
+    Serial.print("Publishing New State: ");
+    Serial.println(s_event);
+  #endif
+  Particle.publish("state", s_event, 60, PRIVATE);
+  if (o_config->a_config.values.n_alertEvents & 0x01 << n_event)
+    f_publishAlert("state", s_event.c_str());
+}
+
+/**
+ * Publishes current door's state to cloud
  */
 void c_door::f_publishState() {
-    #ifdef APPDEBUG
-        Serial.print("Publishing New State: ");
-        Serial.println(f_translateState(n_doorState));
-    #endif
-    Particle.publish("state", f_translateState(n_doorState), 60, PRIVATE);
-    n_lastEvent = Time.now();
-    f_prepStatus();
+  f_publishEvent(n_doorState);
+  n_lastEvent = Time.now();
+  f_prepStatus();
+}
+
+/**
+ * Publishes alert to the cloud
+ */
+void c_door::f_publishAlert(const char* s_type, const char* s_data) {
+  char s_alertData[128];
+  sprintf(s_alertData, "{type: '%s', data: '%s'}", s_type, s_data);
+  #ifdef APPDEBUG
+    Serial.print("Publishing New Alert: ");
+    Serial.println(s_alertData);
+  #endif
+  Particle.publish("alert", s_alertData, 60, PRIVATE);
 }
 
 /**
@@ -405,8 +418,8 @@ void c_door::f_prepStatus() {
 
     char s_time[10];
     uint32_t n_time = Time.now() - n_lastEvent;
-    f_formatTime(n_time, s_time);
 
+    f_formatTime(n_time, s_time);
     sprintf(
         s_doorStatus,
         "status=%s|time=%s|sensor=%u|signal=%d",
@@ -435,14 +448,24 @@ void c_door::f_formatTime(uint32_t n_time, char* s_time) {
 }
 
 /**
- * Updates configuration from the string
+ * Processes the config update request
  */
-int8_t c_door::f_setConfig(String s_config) {
-    int8_t n_result = o_config->f_set(s_config);
-    // configure sensor
-    o_sensor->f_setParams(
-      o_config->a_config.values.n_sensorReads,
-      o_config->a_config.values.n_sensorThreshold
-    );
-    return n_result;
+signed char c_door::f_setConfig(String s_config) {
+  int8_t n_updates = o_config->f_set(s_config);
+  #ifdef APPDEBUG
+    Serial.print("Config update: ");
+    Serial.print(s_config);
+    Serial.print(", EEPROM bytes updated: ");
+    Serial.println(n_updates);
+  #endif
+  if (!n_updates)
+    return 0;
+
+  // configure sensor
+  o_sensor->f_setParams(
+    o_config->a_config.values.n_sensorReads,
+    o_config->a_config.values.n_sensorThreshold
+  );
+  f_publishAlert("config", s_config.c_str());
+  return n_updates;
 }

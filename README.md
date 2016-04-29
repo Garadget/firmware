@@ -11,7 +11,7 @@ At the core of the device is Particle Photon P1 module allowing Garadget to bene
 - [numerous developer resources](https://docs.particle.io/guide/tools-and-features/dev/)
 
 ## Communication Protocol
-Garadget communicates with the clients via Particle cloud using 
+Garadget communicates with the clients via Particle cloud using
 - [exposing variables](https://docs.particle.io/reference/firmware/photon/#particle-variable-) to report status and configuration
 - [accepting function calls](https://docs.particle.io/reference/firmware/photon/#particle-function-) to change status and update configuration
 - [publishing events](https://docs.particle.io/reference/firmware/photon/#particle-publish-) to report status changes and send alerts
@@ -24,7 +24,7 @@ String `status=%s|time=%u%c|sensor=%u|signal=%d` where
 - `signal` is WiFi signal strength in dB
 
 ### Variable: doorConfig
-String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aot=%d|ans=%d|ane=%d` containing pipe separated value for firmware version and timing parameters (all numeric):
+String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d` containing pipe separated value for firmware version and timing parameters (all numeric):
 - `ver` - version, dot separated major and minor (currently 1.3)
 - `rdt` - sensor scan interval in mS (200-60,000, default 1,000)
 - `mtt` - door moving time in mS from completely completely opened to completely closed (1,000 - 120,000, default 10,000)
@@ -32,9 +32,11 @@ String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aot=%d
 - `rlp` - delay between consecutive button presses in mS (10-5,000 default 1,000)
 - `srr` - number of sensor reads used in averaging (1-20, default 3)
 - `srt` - reflection threshold below which the door is considered open (1-80, default 25)
-- `aot` - alert for open timeout in seconds (0 disables, default 320 - 20min)
+- `aev` - number serving as bitmap for enabling status alerts (starting from LSB: closed, open, closing, opening, stopped, init, online, offline, config)
+- `aot` - alert for open timeout in seconds (0 disables, default 1,200 - 20min)
 - `ans` - alert for night time start in minutes from midnight (same value as ane disables, default 1320 - 10pm)
 - `ane` - alert for night time end in minutes from midnight (same value as ans disables, default 360 - 6am)
+- `tzo` - float number for hours offset from GMT and optional character to resolve ambiguity where multiple locations are in the same offset. Full list is available in alerts configuration page of web interface
 
 ### Variable: netConfig
 String `ip=%d.%d.%d.%d|snet=%d.%d.%d.%d|gway=%d.%d.%d.%d|mac=%02X:%02X:%02X:%02X:%02X:%02X|ssid=%s` where
@@ -50,18 +52,29 @@ Requests change of door state. As parameter the function receives a string conta
 Updates configuration parameters. As parameter the function receives a string containing pipe delimited values for `doorConfig` that need to be updated e.g. `srr=5|rlp=%d`. Omitted parameters will remain unchanged, the order of parameters is not important. The length is limited to 63 characters so the request for multiple changes may need to be split into multiple calls.
 
 ### Event: state
-Published when state of the door changes, parameter is the new state
+Published when state of the door changes, parameter is the new state. This event can be used to update the UI.
 
-### Event: config
-Published when device configuration is updated, parameter is the number of variables changed
+### Event: alert
+Published when alert is generated or device configuration changes. Parameter is JSON with the type of alert and related data. Multiple alert types are supported:
 
-### Event: timeout
-Published when door remains open longer than the configured timeout, parameter is the the configured timeout
+#### state
+Published when state of the door or device changes and alert for the new state is enabled in configuration (`aev` setting).
+Example JSON: `{type: 'state', data: 'opening'}`
 
-### Event: night
-Published when door remains opens at the beginning of the configured night period or opened during that period. Parameter is the configured time of start of the night period
+#### timeout
+Published when door remains open longer than the configured timeout, parameter is the configured timeout (`aot` setting).
+Example JSON: `{type: 'timeout', data: '20m'}`
+
+#### night
+Published when door remains opens at the beginning of the configured night period or opened during that period. Parameter is the configured time of start of the night period. Parameter is configured time range (`ans` and `ane` settings).
+Example JSON: `{type: 'night', data: '1320-360'}`
+
+#### config
+Published when device configuration is updated, parameter is the updated configuration string.
+{type: 'config', data: 'ans=1320|ane=360|tzo=-7.0'}
 
 ## Developer Resources
+- [Garadget Community Forum](http://community.garadget.com/) - post your questions, ideas and requests.
 - [Particle Build](https://build.particle.io/build/new) - web based development environment. Edit, compile and upload your new code wirelessly.
 - [Particle Dashboard](https://dashboard.particle.io/user/logs) - monitor cloud events
 - [Particle Documentation](https://docs.particle.io/reference/firmware/photon/) - Photon documentation
