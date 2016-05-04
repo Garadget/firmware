@@ -3,7 +3,7 @@
  * @file door.cpp
  * @brief Garagio door class implementation
  * @author Denis Grisak
- * @version 1.5
+ * @version 1.6
  */
 // $Log$
 
@@ -12,30 +12,31 @@
 /** constructor */
 c_door::c_door() {
 
-    // setup hardware
-    pinMode(PIN_RELAY, OUTPUT);
-    digitalWrite(PIN_RELAY, LOW);
+  // setup hardware
+  pinMode(PIN_RELAY, OUTPUT);
+  digitalWrite(PIN_RELAY, LOW);
 
-    // configure sensor
-    o_sensor->f_setParams(
-      o_config->a_config.values.n_sensorReads,
-      o_config->a_config.values.n_sensorThreshold
-    );
+  // configure sensor
+  o_sensor->f_setParams(
+    o_config->a_config.values.n_sensorReads,
+    o_config->a_config.values.n_sensorThreshold
+  );
 
-    // configure timers
-    o_scanTimeout->f_setDuration(&o_config->a_config.values.n_readTime);
-    o_motionTimeout->f_setDuration(&o_config->a_config.values.n_motionTime);
-    o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
-    o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
+  // configure timers
+  o_scanTimeout->f_setDuration(&o_config->a_config.values.n_readTime);
+  o_motionTimeout->f_setDuration(&o_config->a_config.values.n_motionTime);
+  o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
+  o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
 
-    // configure variables
-    Time.zone(o_config->a_config.values.n_timeZone);
-    n_lastEvent = Time.now();
-    f_prepStatus();
-    f_prepNetConfig();
-    Particle.variable("doorStatus", s_doorStatus, STRING);
-    Particle.variable("netConfig", s_netConfig, STRING);
-    f_publishEvent(STATE_INIT);
+  // configure variables
+  o_config->f_requestName();
+  Time.zone(o_config->a_config.values.n_timeZone);
+  n_lastEvent = Time.now();
+  f_prepStatus();
+  f_prepNetConfig();
+  Particle.variable("doorStatus", s_doorStatus, STRING);
+  Particle.variable("netConfig", s_netConfig, STRING);
+  f_publishEvent(STATE_INIT);
 }
 
 /**
@@ -44,27 +45,27 @@ c_door::c_door() {
  */
 void c_door::f_process() {
 
-    Particle.process();
+  Particle.process();
 
-    // handle relay clicks
-    if (o_relayOnTimeout->f_isTimeout())
-        f_relayOff();
-    else if (o_relayOffTimeout->f_isTimeout())
-        f_relayOn();
+  // handle relay clicks
+  if (o_relayOnTimeout->f_isTimeout())
+    f_relayOff();
+  else if (o_relayOffTimeout->f_isTimeout())
+    f_relayOn();
 
-    // handle regular state scans
-    if (!o_scanTimeout->f_isRunning()) {
-        f_getState();
-        f_prepStatus();
-        f_prepNetConfig();
-        f_processAlertTimeout();
-        f_processAlertNight();
-        o_scanTimeout->f_start();
-    }
+  // handle regular state scans
+  if (!o_scanTimeout->f_isRunning()) {
+    f_getState();
+    f_prepStatus();
+    f_prepNetConfig();
+    f_processAlertTimeout();
+    f_processAlertNight();
+    o_scanTimeout->f_start();
+  }
 
-    // hanle motion timeout
-    if (o_motionTimeout->f_isTimeout())
-        f_motionTimeout();
+  // hanle motion timeout
+  if (o_motionTimeout->f_isTimeout())
+    f_motionTimeout();
 }
 
 /**
@@ -118,10 +119,10 @@ void c_door::f_processAlertNight() {
  * @param[in] uint8_t n_clicks - In initial call specifies number of clicks
  */
 void c_door::f_relayOn(uint8_t n_clicks) {
-    if (n_clicks)
-        n_relayClicksLeft = n_clicks;
-    digitalWrite(PIN_RELAY, HIGH);
-    o_relayOnTimeout->f_start();
+  if (n_clicks)
+    n_relayClicksLeft = n_clicks;
+  digitalWrite(PIN_RELAY, HIGH);
+  o_relayOnTimeout->f_start();
 }
 
 /**
@@ -129,53 +130,53 @@ void c_door::f_relayOn(uint8_t n_clicks) {
  * Called by timer
  */
 void c_door::f_relayOff() {
-    digitalWrite(PIN_RELAY, LOW);
-    n_relayClicksLeft--;
-    if (n_relayClicksLeft)
-        o_relayOffTimeout->f_start();
+  digitalWrite(PIN_RELAY, LOW);
+  n_relayClicksLeft--;
+  if (n_relayClicksLeft)
+    o_relayOffTimeout->f_start();
 }
 
 /**
  * Handles motion timeout, called by timer
  */
 void c_door::f_motionTimeout() {
-    switch (n_doorState) {
-        case STATE_OPENING:
-            n_doorState = STATE_OPEN;
-            f_publishState();
-            break;
+  switch (n_doorState) {
+    case STATE_OPENING:
+      n_doorState = STATE_OPEN;
+      f_publishState();
+      break;
 
-        case STATE_CLOSING:
-            #if APPVIRTUAL
-                n_doorState = STATE_CLOSED;
-                b_alertFiredTimeout = false;
-                b_alertFiredNight = false;
-                f_publishState();
-            #else
-                if (f_getState() != STATE_CLOSED) {
-                    n_doorState = STATE_STOPPED;
-                    f_publishState();
-                }
-            #endif
-            break;
-    }
+    case STATE_CLOSING:
+      #if APPVIRTUAL
+        n_doorState = STATE_CLOSED;
+        b_alertFiredTimeout = false;
+        b_alertFiredNight = false;
+        f_publishState();
+      #else
+        if (f_getState() != STATE_CLOSED) {
+          n_doorState = STATE_STOPPED;
+          f_publishState();
+        }
+      #endif
+      break;
+  }
 }
 
 /**
  * Translates string state to enum
  */
 c_door::doorState c_door::f_translateState(String s_state) {
-    if (s_state.equals("closed") || s_state.equals("close"))
-        return STATE_CLOSED;
-    if (s_state.equals("open"))
-        return STATE_OPEN;
-    if (s_state.equals("closing"))
-        return STATE_CLOSING;
-    if (s_state.equals("opening"))
-        return STATE_OPENING;
-    if (s_state.equals("stopped"))
-        return STATE_STOPPED;
-    return STATE_UNKNOWN;
+  if (s_state.equals("closed") || s_state.equals("close"))
+    return STATE_CLOSED;
+  if (s_state.equals("open"))
+    return STATE_OPEN;
+  if (s_state.equals("closing"))
+    return STATE_CLOSING;
+  if (s_state.equals("opening"))
+    return STATE_OPENING;
+  if (s_state.equals("stopped"))
+    return STATE_STOPPED;
+  return STATE_UNKNOWN;
 }
 
 /**
@@ -208,26 +209,26 @@ String c_door::f_translateState(doorState n_state) {
  */
 c_door::doorState c_door::f_getState() {
 
-    #if APPVIRTUAL
-        return n_doorState == STATE_CLOSED ? STATE_CLOSED : STATE_OPEN;
-    #endif
-    bool b_closed = o_sensor->f_isTripping();
+  #if APPVIRTUAL
+    return n_doorState == STATE_CLOSED ? STATE_CLOSED : STATE_OPEN;
+  #endif
+  bool b_closed = o_sensor->f_isTripping();
 
-    // re-set state based on sensor
-    if (b_closed && n_doorState != STATE_CLOSED) {
-        n_doorState = STATE_CLOSED;
-        b_alertFiredTimeout = false;
-        b_alertFiredNight = false;
-        o_motionTimeout->f_stop();
-        f_publishState();
-    }
-    // opening initiated
-    else if (!b_closed && n_doorState == STATE_CLOSED) {
-        n_doorState = STATE_OPENING;
-        o_motionTimeout->f_start();
-        f_publishState();
-    }
-    return n_doorState;
+  // re-set state based on sensor
+  if (b_closed && n_doorState != STATE_CLOSED) {
+    n_doorState = STATE_CLOSED;
+    b_alertFiredTimeout = false;
+    b_alertFiredNight = false;
+    o_motionTimeout->f_stop();
+    f_publishState();
+  }
+  // opening initiated
+  else if (!b_closed && n_doorState == STATE_CLOSED) {
+    n_doorState = STATE_OPENING;
+    o_motionTimeout->f_start();
+    f_publishState();
+  }
+  return n_doorState;
 }
 
 /**
@@ -242,7 +243,7 @@ signed char c_door::f_setState(String s_state) {
 
   doorState n_requestedState = f_translateState(s_state);
   if (n_requestedState == STATE_UNKNOWN)
-      return -1;
+    return -1;
   f_setState(n_requestedState);
   return 0;
 }
@@ -263,19 +264,19 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
       switch (n_doorState) {
         case STATE_OPEN:
         case STATE_OPENING:
-            return n_doorState;
+          return n_doorState;
         case STATE_CLOSING:
-            n_newDoorState = STATE_OPENING;
+          n_newDoorState = STATE_OPENING;
         case STATE_CLOSED:
-            // rely on sensor to detect the change of state
-            #ifdef APPDEBUG
-                n_newDoorState = STATE_OPENING;
-            #endif
-            n_clicks = 1;
-            break;
-        case STATE_STOPPED:
+          // rely on sensor to detect the change of state
+          #ifdef APPDEBUG
             n_newDoorState = STATE_OPENING;
-            n_clicks = 2;
+          #endif
+          n_clicks = 1;
+          break;
+        case STATE_STOPPED:
+          n_newDoorState = STATE_OPENING;
+          n_clicks = 2;
           break;
         }
         o_motionTimeout->f_start();
@@ -362,7 +363,13 @@ void c_door::f_publishState() {
  */
 void c_door::f_publishAlert(const char* s_type, const char* s_data) {
   char s_alertData[128];
-  sprintf(s_alertData, "{type: '%s', data: '%s'}", s_type, s_data);
+  sprintf(
+    s_alertData,
+    "{\"name\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}",
+    o_config->s_deviceName,
+    s_type,
+    s_data
+  );
   #ifdef APPDEBUG
     Serial.print("Publishing New Alert: ");
     Serial.println(s_alertData);
@@ -416,18 +423,18 @@ bool c_door::f_prepNetConfig() {
  */
 void c_door::f_prepStatus() {
 
-    char s_time[10];
-    uint32_t n_time = Time.now() - n_lastEvent;
+  char s_time[10];
+  uint32_t n_time = Time.now() - n_lastEvent;
 
-    f_formatTime(n_time, s_time);
-    sprintf(
-        s_doorStatus,
-        "status=%s|time=%s|sensor=%u|signal=%d",
-        f_translateState(n_doorState).c_str(),
-        s_time,
-        o_sensor->f_getLastReading(),
-        WiFi.RSSI()
-    );
+  f_formatTime(n_time, s_time);
+  sprintf(
+    s_doorStatus,
+    "status=%s|time=%s|sensor=%u|signal=%d",
+    f_translateState(n_doorState).c_str(),
+    s_time,
+    o_sensor->f_getLastReading(),
+    WiFi.RSSI()
+  );
 }
 
 void c_door::f_formatTime(uint32_t n_time, char* s_time) {
@@ -469,3 +476,17 @@ signed char c_door::f_setConfig(String s_config) {
   f_publishAlert("config", s_config.c_str());
   return n_updates;
 }
+
+/**
+ * Handles cloud event
+ */
+void c_door::f_handleEvent(const char* s_topic, const char* s_data) {
+  #ifdef APPDEBUG
+    Serial.print("Handling Topic: ");
+    Serial.print(s_topic);
+    Serial.print(" Value: ");
+    Serial.println(s_data);
+  #endif
+  if (String(s_topic).equals("spark/device/name"))
+    o_config->f_setName(String(s_data));
+ }

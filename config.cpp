@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.5
+* @version 1.6
 */
 // $Log$
 
@@ -101,7 +101,7 @@ int8_t c_config::f_set(String s_newConfig) {
 
   if (s_newConfig.equals("defaults")) {
     #ifdef APPDEBUG
-      Serial.println("Loading Default Configuration");
+      Serial.println("Loading default configuration");
     #endif
     return f_reset();
   }
@@ -125,7 +125,10 @@ int8_t c_config::f_set(String s_newConfig) {
       n_start = n_end + 1;
     }
 
-    if (s_command.equals("rdt")) {
+    if (s_command.equals("nme")) {
+      c_config::f_setName(s_value);
+    }
+    else if (s_command.equals("rdt")) {
       n_value = s_value.toInt();
       if (n_value < 200 || n_value > 60000)
         n_value = DEFAULT_READTIME;
@@ -197,4 +200,22 @@ int8_t c_config::f_set(String s_newConfig) {
   }
   while (n_end != -1);
   return f_save();
+}
+
+/**
+ * Requests device name from cloud
+ */
+void c_config::f_requestName() {
+  Particle.publish("spark/device/name");
+}
+
+/**
+* Saves specified string as device name
+*/
+void c_config::f_setName(String s_name) {
+  s_name.replace('_', ' ').toCharArray(s_deviceName, MAXNAMESIZE);
+  #ifdef APPDEBUG
+    Serial.print("Renamed to ");
+    Serial.println(s_deviceName);
+  #endif
 }

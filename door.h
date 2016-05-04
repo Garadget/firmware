@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Garagio door class implementation
  * @author Denis Grisak
- * @version 1.5
+ * @version 1.6
  */
 // $Log$
 
@@ -68,6 +68,7 @@ protected:
     doorState f_setState(doorState n_requestedState);
     signed char f_setState(String s_request);
     int8_t f_setConfig(String s_config);
+    void f_handleEvent(const char* s_topic, const char* s_data);
 };
 
 #endif

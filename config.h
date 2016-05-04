@@ -3,7 +3,7 @@
  * @file config.h
  * @brief Implements garadget configuration related functionality
  * @author Denis Grisak
- * @version 1.5
+ * @version 1.6
  */
 // $Log$
 
@@ -40,6 +40,7 @@ class c_config {
 
 public:
   char s_config[MAXVARSIZE];
+  char s_deviceName[MAXNAMESIZE];
   doorConfig a_config;
   c_config();
 
@@ -49,6 +50,18 @@ public:
  * @return 0 on success and -1 on failure
  */
   int8_t f_set(String s_config);
+
+  /**
+   * Requests device name from cloud
+   */
+  void f_requestName();
+
+
+  /**
+   * Sets the provided string as name of the device
+   * @param[in] s_name String name of the device
+   */
+  void f_setName(String s_name);
 
 protected:
   bool f_load();

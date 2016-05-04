@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garagio main file
- * @version 1.5
+ * @version 1.6
  * @author Denis Grisak
  * @license GPL v3
 
@@ -17,7 +17,7 @@
 
 // Particle platform - product settings
 PRODUCT_ID(PROD_ID);
-PRODUCT_VERSION(VERSION_MAJOR*100+VERSION_MINOR);
+PRODUCT_VERSION(VERSION_MAJOR * 100 + VERSION_MINOR);
 
 c_door* o_door;
 
@@ -29,6 +29,10 @@ int f_setConfig(String s_config) {
   return o_door->f_setConfig(s_config);
 }
 
+void f_handleEvent(const char* s_topic, const char* s_data) {
+  o_door->f_handleEvent(s_topic, s_data);
+}
+
 void setup() {
   #ifdef APPDEBUG
     Serial.begin(115200);
@@ -36,6 +40,7 @@ void setup() {
   o_door = new c_door();
   Particle.function("setState", f_doorSetState);
   Particle.function("setConfig", f_setConfig);
+  Particle.subscribe("spark/", f_handleEvent);
 }
 
 void loop() {

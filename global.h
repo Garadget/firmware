@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x05
+#define VERSION_MINOR 0x06
 
 // boolean constants
 //#define FALSE 0x00
@@ -20,6 +20,9 @@
 
 // maximum payload size for variable according to spark.io documentation
 #define MAXVARSIZE 622
+
+// maximum size of device name
+#define MAXNAMESIZE 31
 
 // pin assignments
 #define PIN_LASER D2
