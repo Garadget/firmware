@@ -37,6 +37,7 @@ protected:
     long n_lastEvent;
     doorState n_doorState = STATE_OPEN;
     uint8_t n_relayClicksLeft;
+    bool b_initialized = false;
     bool b_alertFiredTimeout = false;
     bool b_alertFiredNight = false;
 

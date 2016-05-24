@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garagio main file
- * @version 1.6
+ * @version 1.7
  * @author Denis Grisak
  * @license GPL v3
 

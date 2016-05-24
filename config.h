@@ -3,7 +3,7 @@
  * @file config.h
  * @brief Implements garadget configuration related functionality
  * @author Denis Grisak
- * @version 1.6
+ * @version 1.7
  */
 // $Log$
 
@@ -11,6 +11,7 @@
 #define CONFIG_H
 
 #include "application.h"
+#include "timezones.h"
 #include "global.h"
 
 class c_config {
@@ -29,8 +30,8 @@ class c_config {
     uint16_t n_alertOpenTimeout;
     uint16_t n_alertNightStart;
     uint16_t n_alertNightEnd;
-    float n_timeZone;
-    char n_tzIndex;
+    char s_timeZone[25];
+    char s_deviceName[MAXNAMESIZE];
   } configStruct;
 
   union doorConfig {
@@ -38,9 +39,11 @@ class c_config {
     uint8_t bytes[sizeof(configStruct)];
   };
 
+protected:
+  c_timezones* o_timezones;
+
 public:
   char s_config[MAXVARSIZE];
-  char s_deviceName[MAXNAMESIZE];
   doorConfig a_config;
   c_config();
 
@@ -55,7 +58,6 @@ public:
    * Requests device name from cloud
    */
   void f_requestName();
-
 
   /**
    * Sets the provided string as name of the device

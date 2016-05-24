@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.6
+* @version 1.7
 */
 // $Log$
 
@@ -12,6 +12,7 @@
 /** constructor */
 c_config::c_config() {
   f_load();
+  o_timezones = new c_timezones(a_config.values.s_timeZone);
   Particle.variable("doorConfig", s_config, STRING);
 }
 
@@ -65,8 +66,7 @@ int8_t c_config::f_reset() {
   a_config.values.n_alertOpenTimeout = DEFAULT_ALERTOPENTIMEOUT;
   a_config.values.n_alertNightStart = DEFAULT_ALERTNIGHTSTART;
   a_config.values.n_alertNightEnd = DEFAULT_ALERTNIGHTEND;
-  a_config.values.n_timeZone = DEFAULT_TIMEZONE;
-  a_config.values.n_tzIndex = DEFAULT_TZINDEX;
+  strcpy(a_config.values.s_timeZone, DEFULT_TZDST);
   return f_save();
 }
 
@@ -74,9 +74,10 @@ int8_t c_config::f_reset() {
 * Generates the string for door configuration variables
 */
 void c_config::f_update() {
+
   sprintf(
     s_config,
-    "ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%.1f%c",
+    "ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%s|nme=%s",
     a_config.values.n_versionMajor,
     a_config.values.n_versionMinor,
     a_config.values.n_readTime,
@@ -89,8 +90,8 @@ void c_config::f_update() {
     a_config.values.n_alertOpenTimeout,
     a_config.values.n_alertNightStart,
     a_config.values.n_alertNightEnd,
-    a_config.values.n_timeZone,
-    a_config.values.n_tzIndex
+    a_config.values.s_timeZone,
+    a_config.values.s_deviceName
   );
 }
 
@@ -186,16 +187,15 @@ int8_t c_config::f_set(String s_newConfig) {
       a_config.values.n_alertNightEnd = n_value;
     }
     else if (s_command.equals("tzo")) {
-      float n_valueFloat = s_value.toFloat();
-      if (n_valueFloat > 13.0)
-        n_value = DEFAULT_TIMEZONE;
-      a_config.values.n_timeZone = n_valueFloat;
-      Time.zone(n_valueFloat);
-
-      char n_valueChar = s_value.charAt(s_value.length() - 1);
-      a_config.values.n_tzIndex = (n_valueChar >= 'A' && n_valueChar <= 'z')
-        ? n_valueChar
-        : DEFAULT_TZINDEX;
+      if (!o_timezones->f_setConfig(s_value)) {
+        o_timezones->f_setConfig(String(DEFULT_TZDST));
+        s_value = String(DEFULT_TZDST);
+      }
+      #ifdef APPDEBUG
+        Serial.print("Updated Timezone, time now: ");
+        Serial.println(Time.timeStr());
+      #endif
+      s_value.toCharArray(a_config.values.s_timeZone, 25);
     }
   }
   while (n_end != -1);
@@ -213,9 +213,9 @@ void c_config::f_requestName() {
 * Saves specified string as device name
 */
 void c_config::f_setName(String s_name) {
-  s_name.replace('_', ' ').toCharArray(s_deviceName, MAXNAMESIZE);
+  s_name.replace('_', ' ').toCharArray(a_config.values.s_deviceName, MAXNAMESIZE);
   #ifdef APPDEBUG
     Serial.print("Renamed to ");
-    Serial.println(s_deviceName);
+    Serial.println(s_name);
   #endif
 }

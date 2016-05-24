@@ -28,15 +28,13 @@ c_door::c_door() {
   o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
   o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
 
-  // configure variables
-  o_config->f_requestName();
-  Time.zone(o_config->a_config.values.n_timeZone);
+// configure variables
   n_lastEvent = Time.now();
   f_prepStatus();
   f_prepNetConfig();
   Particle.variable("doorStatus", s_doorStatus, STRING);
   Particle.variable("netConfig", s_netConfig, STRING);
-  f_publishEvent(STATE_INIT);
+  o_config->f_requestName();
 }
 
 /**
@@ -340,11 +338,11 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
  */
 void c_door::f_publishEvent(doorState n_event) {
   String s_event = f_translateState(n_event);
+  Particle.publish("state", s_event, 60, PRIVATE);
   #ifdef APPDEBUG
-    Serial.print("Publishing New State: ");
+    Serial.print("Published New State: ");
     Serial.println(s_event);
   #endif
-  Particle.publish("state", s_event, 60, PRIVATE);
   if (o_config->a_config.values.n_alertEvents & 0x01 << n_event)
     f_publishAlert("state", s_event.c_str());
 }
@@ -366,15 +364,15 @@ void c_door::f_publishAlert(const char* s_type, const char* s_data) {
   sprintf(
     s_alertData,
     "{\"name\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}",
-    o_config->s_deviceName,
+    o_config->a_config.values.s_deviceName,
     s_type,
     s_data
   );
+  Particle.publish("alert", s_alertData, 60, PRIVATE);
   #ifdef APPDEBUG
-    Serial.print("Publishing New Alert: ");
+    Serial.print("Published New Alert: ");
     Serial.println(s_alertData);
   #endif
-  Particle.publish("alert", s_alertData, 60, PRIVATE);
 }
 
 /**
@@ -465,6 +463,7 @@ signed char c_door::f_setConfig(String s_config) {
     Serial.print(", EEPROM bytes updated: ");
     Serial.println(n_updates);
   #endif
+
   if (!n_updates)
     return 0;
 
@@ -473,7 +472,7 @@ signed char c_door::f_setConfig(String s_config) {
     o_config->a_config.values.n_sensorReads,
     o_config->a_config.values.n_sensorThreshold
   );
-  f_publishAlert("config", s_config.c_str());
+  f_publishAlert("config", s_doorStatus);
   return n_updates;
 }
 
@@ -487,6 +486,11 @@ void c_door::f_handleEvent(const char* s_topic, const char* s_data) {
     Serial.print(" Value: ");
     Serial.println(s_data);
   #endif
-  if (String(s_topic).equals("spark/device/name"))
+  if (String(s_topic).equals("spark/device/name")) {
     o_config->f_setName(String(s_data));
+    if (!b_initialized) {
+      f_publishEvent(STATE_INIT);
+      b_initialized = true;
+    }
+  }
  }

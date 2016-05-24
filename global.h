@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x06
+#define VERSION_MINOR 0x07
 
 // boolean constants
 //#define FALSE 0x00
@@ -70,6 +70,9 @@
 
 // timezone's offset from UTC in hours
 #define DEFAULT_TIMEZONE -7.0;
+
+// default timezone/DST
+#define DEFULT_TZDST "10112-7,20032-6"
 
 // character index to resolve ambuguity for timezone area selection when multiple
 // areas exist for the same timezone offset
