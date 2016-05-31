@@ -24,8 +24,8 @@ String `status=%s|time=%u%c|sensor=%u|signal=%d` where
 - `signal` is WiFi signal strength in dB
 
 ### Variable: doorConfig
-String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d` containing pipe separated value for firmware version and timing parameters (all numeric):
-- `ver` - version, dot separated major and minor (currently 1.6)
+String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d|nme=%s` containing pipe separated value for firmware version and timing parameters (all numeric):
+- `ver` - version, dot separated major and minor (currently 1.7)
 - `rdt` - sensor scan interval in mS (200-60,000, default 1,000)
 - `mtt` - door moving time in mS from completely opened to completely closed (1,000 - 120,000, default 10,000)
 - `rlt` - button press time mS, time for relay to keep contacts closed (10-2,000, default 300)

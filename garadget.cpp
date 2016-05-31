@@ -1,13 +1,13 @@
 // $Id$
 /**
  * @file application.ino
- * @brief Garagio main file
+ * @brief Garadget main file
  * @version 1.7
  * @author Denis Grisak
  * @license GPL v3
 
-  This code is firmware for Garagio - a WiFi garage door controller.
-  For more information please visit http://garag.io/
+  This code is firmware for Garadget - cloud-enabled garage door controller.
+  For more information please visit http://www.garadget.com/
  */
 // $Log$
 

@@ -1,9 +1,9 @@
 // $Id$
 /**
  * @file door.h
- * @brief Garagio door class implementation
+ * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.6
+ * @version 1.7
  */
 // $Log$
 

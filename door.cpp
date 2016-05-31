@@ -1,9 +1,9 @@
 // $Id$
 /**
  * @file door.cpp
- * @brief Garagio door class implementation
+ * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.6
+ * @version 1.7
  */
 // $Log$
 
@@ -360,7 +360,7 @@ void c_door::f_publishState() {
  * Publishes alert to the cloud
  */
 void c_door::f_publishAlert(const char* s_type, const char* s_data) {
-  char s_alertData[128];
+  char s_alertData[MAXVARSIZE + 128];
   sprintf(
     s_alertData,
     "{\"name\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}",
@@ -472,7 +472,7 @@ signed char c_door::f_setConfig(String s_config) {
     o_config->a_config.values.n_sensorReads,
     o_config->a_config.values.n_sensorThreshold
   );
-  f_publishAlert("config", s_doorStatus);
+  f_publishAlert("config", o_config->s_config);
   return n_updates;
 }
 
