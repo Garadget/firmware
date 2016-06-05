@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x07
+#define VERSION_MINOR 0x08
 
 // boolean constants
 //#define FALSE 0x00

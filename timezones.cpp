@@ -3,7 +3,7 @@
  * @file timezones.h
  * @brief Implements DST aware time zone adjustment
  * @author Denis Grisak
- * @version 1.6
+ * @version 1.8
  */
 // $Log$
 
@@ -45,19 +45,25 @@ bool c_timezones::f_setConfig(const String s_dstRules) {
 
 //  example 20032-6 : second (2) sunday (0) in march(03) at 2am (2) offset -6hrs (-6)
 bool c_timezones::f_parseRule(const String s_dtsRule, dstRule_t* a_result) {
+
   a_result->n_weekNum = s_dtsRule.substring(0, 1).toInt();
   if (a_result->n_weekNum > 4)
     return false;
+
   a_result->n_weekDay = s_dtsRule.substring(1, 2).toInt();
-  if (a_result->n_weekNum > 6)
+  if (a_result->n_weekDay > 6)
     return false;
+
   a_result->n_month = s_dtsRule.substring(2, 4).toInt();
-  if (a_result->n_weekNum < 1 || a_result->n_weekNum > 12)
+  if (a_result->n_month < 1 || a_result->n_month > 12)
     return false;
+
   a_result->n_hour = s_dtsRule.substring(4, 5).toInt();
+
   a_result->n_offset = (int)(s_dtsRule.substring(5).toFloat() * 60);
   if (a_result->n_offset < -780 || a_result->n_offset > 780)
     return false;
+
   return true;
 }
 

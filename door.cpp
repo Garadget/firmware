@@ -3,7 +3,6 @@
  * @file door.cpp
  * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.7
  */
 // $Log$
 
@@ -28,8 +27,12 @@ c_door::c_door() {
   o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
   o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
 
-// configure variables
+  while (Time.year() <= 1970) {
+    delay(200);
+    Particle.syncTime();
+  }
   n_lastEvent = Time.now();
+
   f_prepStatus();
   f_prepNetConfig();
   Particle.variable("doorStatus", s_doorStatus, STRING);
@@ -90,8 +93,9 @@ void c_door::f_processAlertTimeout() {
  */
 void c_door::f_processAlertNight() {
 
-  //  skip if door closed, already fired or disabled
-  if (n_doorState == STATE_CLOSED || b_alertFiredNight || o_config->a_config.values.n_alertNightStart == o_config->a_config.values.n_alertNightEnd)
+  //  skip if door closed, already fired time not initialized or disabled
+  if (n_doorState == STATE_CLOSED || b_alertFiredNight || !n_lastEvent
+    || o_config->a_config.values.n_alertNightStart == o_config->a_config.values.n_alertNightEnd)
     return;
 
   uint16_t n_time = Time.hour() * 60 + Time.minute();

@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.7
+ * @version 1.8
  */
 // $Log$
 
@@ -34,7 +34,7 @@ class c_door {
 protected:
     char s_doorStatus[MAXVARSIZE];
     char s_netConfig[MAXVARSIZE];
-    long n_lastEvent;
+    uint32_t n_lastEvent = 0;
     doorState n_doorState = STATE_OPEN;
     uint8_t n_relayClicksLeft;
     bool b_initialized = false;

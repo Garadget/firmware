@@ -188,8 +188,8 @@ int8_t c_config::f_set(String s_newConfig) {
     }
     else if (s_command.equals("tzo")) {
       if (!o_timezones->f_setConfig(s_value)) {
-        o_timezones->f_setConfig(String(DEFULT_TZDST));
         s_value = String(DEFULT_TZDST);
+        o_timezones->f_setConfig(s_value);
       }
       #ifdef APPDEBUG
         Serial.print("Updated Timezone, time now: ");
