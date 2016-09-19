@@ -3,6 +3,7 @@
  * @file door.cpp
  * @brief Garadget door class implementation
  * @author Denis Grisak
+ * @version 1.8
  */
 // $Log$
 

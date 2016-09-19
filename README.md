@@ -23,6 +23,13 @@ String `status=%s|time=%u%c|sensor=%u|signal=%d` where
 - `sensor` is the sensor reflection rate 0-100
 - `signal` is WiFi signal strength in dB
 
+#### Door states (`status`)
+- `closed`
+- `open`
+- `closing`
+- `opening`
+- `stopped`
+
 ### Variable: doorConfig
 String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d|nme=%s` containing pipe separated value for firmware version and timing parameters (all numeric):
 - `ver` - version, dot separated major and minor (currently 1.7)

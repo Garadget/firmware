@@ -12,8 +12,15 @@
 //#define FALSE 0x00
 //#define TRUE 0x01
 
+// organization mode or generic Particle device
+#define ORGMODE FALSE
+
 // adds debug messages through the serial interface
 #define APPDEBUG TRUE
+
+// antenna mode
+//#define ANT_MODE ANT_EXTERNAL
+#define ANT_MODE ANT_INTERNAL
 
 // switches in simulated door mode
 #define APPVIRTUAL FALSE
@@ -57,25 +64,18 @@
 
 // bitmap of event notification switches
 // bits corresponding to states declared in enum doorState in the same order
-#define DEFAULT_ALERTEVENTS 0x00;
+#define DEFAULT_ALERTEVENTS 0x00
 
 // time in seconds for door to remain open before alert is sent
 // 0 disables the alert
-#define DEFAULT_ALERTOPENTIMEOUT 20*60
+#define DEFAULT_ALERTOPENTIMEOUT 0
 
 // time in minutes for beginning and end of night alert timeframe
 // equal values disable alert
-#define DEFAULT_ALERTNIGHTSTART 22*60
-#define DEFAULT_ALERTNIGHTEND 06*60
-
-// timezone's offset from UTC in hours
-#define DEFAULT_TIMEZONE -7.0;
+#define DEFAULT_ALERTNIGHTSTART 0
+#define DEFAULT_ALERTNIGHTEND 0
 
 // default timezone/DST
 #define DEFULT_TZDST "10112-7,20032-6"
-
-// character index to resolve ambuguity for timezone area selection when multiple
-// areas exist for the same timezone offset
-#define DEFAULT_TZINDEX '\0';
 
 #endif
