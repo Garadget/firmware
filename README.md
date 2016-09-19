@@ -18,7 +18,7 @@ Garadget communicates with the clients via Particle cloud by
 
 ### Variable: doorStatus
 String `status=%s|time=%u%c|sensor=%u|signal=%d` where
-- `status` - is current status of the door such as `open`, `closed` etc
+- `status` - is current status of the door such as `open`, `closed`, `stopped` etc
 - `time` - time in that status 0-119s, 2-119m, 2-47h, 2+d
 - `sensor` is the sensor reflection rate 0-100
 - `signal` is WiFi signal strength in dB
