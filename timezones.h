@@ -32,9 +32,8 @@ public:
 
   /**
    * Class constructor - adjusts system's timezone accoring to provided DST rule structure
-   * @param[in] s_timeZone timezone and DST rules string
    */
-  c_timezones(const char* s_timeZone);
+  c_timezones();
 
   /**
    * Sets DST rules from the string

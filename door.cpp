@@ -3,7 +3,7 @@
  * @file door.cpp
  * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.8
+ * @version 1.9
  */
 // $Log$
 
@@ -11,22 +11,23 @@
 
 /** constructor */
 c_door::c_door() {
-
-  // setup hardware
   pinMode(PIN_RELAY, OUTPUT);
   digitalWrite(PIN_RELAY, LOW);
+}
+
+void c_door::f_init() {
 
   // configure sensor
-  o_sensor->f_setParams(
-    o_config->a_config.values.n_sensorReads,
-    o_config->a_config.values.n_sensorThreshold
+  o_sensor.f_setParams(
+    o_config.a_config.values.n_sensorReads,
+    o_config.a_config.values.n_sensorThreshold
   );
 
   // configure timers
-  o_scanTimeout->f_setDuration(&o_config->a_config.values.n_readTime);
-  o_motionTimeout->f_setDuration(&o_config->a_config.values.n_motionTime);
-  o_relayOnTimeout->f_setDuration(&o_config->a_config.values.n_relayTime);
-  o_relayOffTimeout->f_setDuration(&o_config->a_config.values.n_relayPause);
+  o_scanTimeout.f_setDuration(&o_config.a_config.values.n_readTime);
+  o_motionTimeout.f_setDuration(&o_config.a_config.values.n_motionTime);
+  o_relayOnTimeout.f_setDuration(&o_config.a_config.values.n_relayTime);
+  o_relayOffTimeout.f_setDuration(&o_config.a_config.values.n_relayPause);
 
   while (Time.year() <= 1970) {
     delay(200);
@@ -36,9 +37,17 @@ c_door::c_door() {
 
   f_prepStatus();
   f_prepNetConfig();
+
+  Particle.function("setState", &c_door::f_receiveState, this);
+  Particle.function("setConfig", &c_door::f_receiveConfig, this);
   Particle.variable("doorStatus", s_doorStatus, STRING);
   Particle.variable("netConfig", s_netConfig, STRING);
-  o_config->f_requestName();
+  Particle.subscribe("spark/", &c_door::f_handleEvent, this);
+  o_config.f_requestName();
+
+  #ifdef APPDEBUG
+    Serial.println("Door Init");
+  #endif
 }
 
 /**
@@ -50,23 +59,23 @@ void c_door::f_process() {
   Particle.process();
 
   // handle relay clicks
-  if (o_relayOnTimeout->f_isTimeout())
+  if (o_relayOnTimeout.f_isTimeout())
     f_relayOff();
-  else if (o_relayOffTimeout->f_isTimeout())
+  else if (o_relayOffTimeout.f_isTimeout())
     f_relayOn();
 
   // handle regular state scans
-  if (!o_scanTimeout->f_isRunning()) {
+  if (!o_scanTimeout.f_isRunning()) {
     f_getState();
     f_prepStatus();
     f_prepNetConfig();
     f_processAlertTimeout();
     f_processAlertNight();
-    o_scanTimeout->f_start();
+    o_scanTimeout.f_start();
   }
 
   // hanle motion timeout
-  if (o_motionTimeout->f_isTimeout())
+  if (o_motionTimeout.f_isTimeout())
     f_motionTimeout();
 }
 
@@ -76,11 +85,11 @@ void c_door::f_process() {
 void c_door::f_processAlertTimeout() {
 
   //  skip if door closed, already fired or disabled
-  if (n_doorState == STATE_CLOSED || b_alertFiredTimeout || !o_config->a_config.values.n_alertOpenTimeout)
+  if (n_doorState == STATE_CLOSED || b_alertFiredTimeout || !o_config.a_config.values.n_alertOpenTimeout)
     return;
 
   uint32_t n_time = Time.now() - n_lastEvent;
-  if (n_time < o_config->a_config.values.n_alertOpenTimeout)
+  if (n_time < o_config.a_config.values.n_alertOpenTimeout)
     return;
 
   char s_time[10];
@@ -96,12 +105,12 @@ void c_door::f_processAlertNight() {
 
   //  skip if door closed, already fired time not initialized or disabled
   if (n_doorState == STATE_CLOSED || b_alertFiredNight || !n_lastEvent
-    || o_config->a_config.values.n_alertNightStart == o_config->a_config.values.n_alertNightEnd)
+    || o_config.a_config.values.n_alertNightStart == o_config.a_config.values.n_alertNightEnd)
     return;
 
   uint16_t n_time = Time.hour() * 60 + Time.minute();
-  uint16_t n_start = o_config->a_config.values.n_alertNightStart;
-  uint16_t n_end = o_config->a_config.values.n_alertNightEnd;
+  uint16_t n_start = o_config.a_config.values.n_alertNightStart;
+  uint16_t n_end = o_config.a_config.values.n_alertNightEnd;
 
   // period crossing overnight
   if (n_start > n_end && n_time < n_start && n_time > n_end)
@@ -125,7 +134,7 @@ void c_door::f_relayOn(uint8_t n_clicks) {
   if (n_clicks)
     n_relayClicksLeft = n_clicks;
   digitalWrite(PIN_RELAY, HIGH);
-  o_relayOnTimeout->f_start();
+  o_relayOnTimeout.f_start();
 }
 
 /**
@@ -136,7 +145,7 @@ void c_door::f_relayOff() {
   digitalWrite(PIN_RELAY, LOW);
   n_relayClicksLeft--;
   if (n_relayClicksLeft)
-    o_relayOffTimeout->f_start();
+    o_relayOffTimeout.f_start();
 }
 
 /**
@@ -215,20 +224,20 @@ c_door::doorState c_door::f_getState() {
   #if APPVIRTUAL
     return n_doorState == STATE_CLOSED ? STATE_CLOSED : STATE_OPEN;
   #endif
-  bool b_closed = o_sensor->f_isTripping();
+  bool b_closed = o_sensor.f_isTripping();
 
   // re-set state based on sensor
   if (b_closed && n_doorState != STATE_CLOSED) {
     n_doorState = STATE_CLOSED;
     b_alertFiredTimeout = false;
     b_alertFiredNight = false;
-    o_motionTimeout->f_stop();
+    o_motionTimeout.f_stop();
     f_publishState();
   }
   // opening initiated
   else if (!b_closed && n_doorState == STATE_CLOSED) {
     n_doorState = STATE_OPENING;
-    o_motionTimeout->f_start();
+    o_motionTimeout.f_start();
     f_publishState();
   }
   return n_doorState;
@@ -237,11 +246,10 @@ c_door::doorState c_door::f_getState() {
 /**
  * Processes the external state change request
  */
-signed char c_door::f_setState(String s_state) {
+int c_door::f_receiveState(String s_state) {
 
   #ifdef APPDEBUG
-    Serial.print("Received State Request: ");
-    Serial.println(s_state);
+    Serial.printf("Received State Request: %s\r\n", s_state.c_str());
   #endif
 
   doorState n_requestedState = f_translateState(s_state);
@@ -282,7 +290,7 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
           n_clicks = 2;
           break;
         }
-        o_motionTimeout->f_start();
+        o_motionTimeout.f_start();
         break;
 
     // close command
@@ -293,14 +301,14 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
         case STATE_CLOSING:
           return n_doorState;
         case STATE_OPEN:
+        case STATE_STOPPED:
           n_clicks = 1;
           break;
         case STATE_OPENING:
-        case STATE_STOPPED:
           n_clicks = 2;
           break;
       }
-      o_motionTimeout->f_start();
+      o_motionTimeout.f_start();
       n_newDoorState = STATE_CLOSING;
       break;
 
@@ -318,7 +326,7 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
           n_clicks = 2;
           break;
       }
-      o_motionTimeout->f_stop();
+      o_motionTimeout.f_stop();
       n_newDoorState = STATE_STOPPED;
       break;
 
@@ -332,8 +340,7 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
   f_publishState();
 
   #ifdef APPDEBUG
-    Serial.print("Doing button clicks: ");
-    Serial.println(n_clicks);
+    Serial.printf("Doing %u button clicks\r\n", n_clicks);
   #endif
   return n_doorState;
 }
@@ -345,10 +352,9 @@ void c_door::f_publishEvent(doorState n_event) {
   String s_event = f_translateState(n_event);
   Particle.publish("state", s_event, 60, PRIVATE);
   #ifdef APPDEBUG
-    Serial.print("Published New State: ");
-    Serial.println(s_event);
+    Serial.printf("Published New State: %s\r\n", s_event.c_str());
   #endif
-  if (o_config->a_config.values.n_alertEvents & 0x01 << n_event)
+  if (o_config.a_config.values.n_alertEvents & 0x01 << n_event)
     f_publishAlert("state", s_event.c_str());
 }
 
@@ -369,14 +375,13 @@ void c_door::f_publishAlert(const char* s_type, const char* s_data) {
   sprintf(
     s_alertData,
     "{\"name\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}",
-    o_config->a_config.values.s_deviceName,
+    o_config.a_config.values.s_deviceName,
     s_type,
     s_data
   );
   Particle.publish("alert", s_alertData, 60, PRIVATE);
   #ifdef APPDEBUG
-    Serial.print("Published New Alert: ");
-    Serial.println(s_alertData);
+    Serial.printf("Published New Alert: %s\r\n", s_alertData);
   #endif
 }
 
@@ -435,7 +440,7 @@ void c_door::f_prepStatus() {
     "status=%s|time=%s|sensor=%u|signal=%d",
     f_translateState(n_doorState).c_str(),
     s_time,
-    o_sensor->f_getLastReading(),
+    o_sensor.f_getReflection(),
     WiFi.RSSI()
   );
 }
@@ -460,24 +465,21 @@ void c_door::f_formatTime(uint32_t n_time, char* s_time) {
 /**
  * Processes the config update request
  */
-signed char c_door::f_setConfig(String s_config) {
-  int8_t n_updates = o_config->f_set(s_config);
+int c_door::f_receiveConfig(String s_config) {
+  int8_t n_updates = o_config.f_set(s_config);
   #ifdef APPDEBUG
-    Serial.print("Config update: ");
-    Serial.print(s_config);
-    Serial.print(", EEPROM bytes updated: ");
-    Serial.println(n_updates);
+    Serial.printf("Config update: %s, EEPROM bytes updated: %u \r\n", s_config, n_updates);
   #endif
 
   if (!n_updates)
     return 0;
 
   // configure sensor
-  o_sensor->f_setParams(
-    o_config->a_config.values.n_sensorReads,
-    o_config->a_config.values.n_sensorThreshold
+  o_sensor.f_setParams(
+    o_config.a_config.values.n_sensorReads,
+    o_config.a_config.values.n_sensorThreshold
   );
-  f_publishAlert("config", o_config->s_config);
+  f_publishAlert("config", o_config.s_config);
   return n_updates;
 }
 
@@ -486,13 +488,10 @@ signed char c_door::f_setConfig(String s_config) {
  */
 void c_door::f_handleEvent(const char* s_topic, const char* s_data) {
   #ifdef APPDEBUG
-    Serial.print("Handling Topic: ");
-    Serial.print(s_topic);
-    Serial.print(" Value: ");
-    Serial.println(s_data);
+    Serial.printf("Handling Topic: %s, Value: %s\r\n", s_topic, s_data);
   #endif
   if (String(s_topic).equals("spark/device/name")) {
-    o_config->f_setName(String(s_data));
+    o_config.f_setName(String(s_data));
     if (!b_initialized) {
       f_publishEvent(STATE_INIT);
       b_initialized = true;

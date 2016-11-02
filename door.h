@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Garadget door class implementation
  * @author Denis Grisak
- * @version 1.8
+ * @version 1.9
  */
 // $Log$
 
@@ -11,10 +11,10 @@
 #define DOOR_H
 
 #include "application.h"
+#include "global.h"
 #include "config.h"
 #include "timeout.h"
 #include "sensor.h"
-#include "global.h"
 
 class c_door {
 
@@ -41,12 +41,12 @@ protected:
     bool b_alertFiredTimeout = false;
     bool b_alertFiredNight = false;
 
-    c_config  *o_config = new c_config();
-    c_sensor  *o_sensor = new c_sensor();
-    c_timeout *o_scanTimeout = new c_timeout();
-    c_timeout *o_relayOnTimeout = new c_timeout();
-    c_timeout *o_relayOffTimeout = new c_timeout();
-    c_timeout *o_motionTimeout = new c_timeout();
+    c_config o_config;
+    c_sensor o_sensor;
+    c_timeout o_scanTimeout;
+    c_timeout o_motionTimeout;
+    c_timeout o_relayOnTimeout;
+    c_timeout o_relayOffTimeout;
 
     void f_motionTimeout();
     void f_relayOn(uint8_t n_clicks = 0);
@@ -64,11 +64,12 @@ protected:
 
  public:
     c_door();
+    void f_init();
     void f_process();
     doorState f_getState();
     doorState f_setState(doorState n_requestedState);
-    signed char f_setState(String s_request);
-    int8_t f_setConfig(String s_config);
+    int f_receiveState(String s_request);
+    int f_receiveConfig(String s_config);
     void f_handleEvent(const char* s_topic, const char* s_data);
 };
 

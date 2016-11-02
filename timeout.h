@@ -30,6 +30,13 @@ class c_timeout {
     c_timeout(uint16_t n_initialDuration = 0);
 
 /**
+ * Timeout constructor
+ * @param[in] uint16_t* p_newDuration Pointer to variable containing timer duraction in
+ *  milliseconds
+ */
+    c_timeout(uint16_t* p_newDuration);
+
+/**
  * Sets duration for the timeout. The duration is preserved across the timer
  *  runs until changed.
  * @param[in] uint16_t n_newDuration Timer duration in milliseconds

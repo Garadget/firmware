@@ -3,7 +3,7 @@
  * @file sensor.cpp
  * @brief Laser sensor related functionality
  * @author Denis Grisak
- * @version 1.0
+ * @version 1.9
  */
 // $Log$
 
@@ -21,27 +21,30 @@ void c_sensor::f_setParams(uint8_t n_readsParam, uint8_t n_thresholdParam) {
 
 uint8_t c_sensor::f_read() {
 
-    int n_value;
-    long n_sum1 = 0,
-        n_sum2 = 0;
+  long n_sum1 = 0,
+      n_sum2 = 0;
 
-    for (uint8_t n_read = n_reads; n_read > 0; n_read--) {
-        n_value = analogRead(PIN_PHOTO);
-        n_sum1 += n_value;
-        digitalWriteFast(PIN_LASER, HIGH);
-        delayMicroseconds(500);
-        n_sum2 += n_value - analogRead(PIN_PHOTO);
-        digitalWriteFast(PIN_LASER, LOW);
-        delayMicroseconds(1000);
-    }
-    return n_sum1 ? (float)n_sum2 * 100 / n_sum1 : 0;
+  for (uint8_t n_read = n_reads; n_read > 0; n_read--) {
+    n_base = analogRead(PIN_PHOTO);
+    n_sum1 += n_base;
+    digitalWriteFast(PIN_LASER, HIGH);
+    delay(1);
+    n_sum2 += n_base - analogRead(PIN_PHOTO);
+    digitalWriteFast(PIN_LASER, LOW);
+    delay(1);
+  }
+  n_reflection = !n_sum1 || n_sum2 > n_sum1 ? 0 : (n_sum2 * 100 / n_sum1);
+  return n_reflection;
 }
 
 bool c_sensor::f_isTripping() {
-    n_lastReadValue = f_read();
-    return n_lastReadValue > n_threshold;
+  return (f_read() > n_threshold);
 }
 
-uint8_t c_sensor::f_getLastReading() {
-    return n_lastReadValue;
+uint8_t c_sensor::f_getReflection() {
+  return n_reflection;
+}
+
+uint16_t c_sensor::f_getBase() {
+  return n_base;
 }

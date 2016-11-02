@@ -40,7 +40,7 @@ class c_config {
   };
 
 protected:
-  c_timezones* o_timezones;
+  c_timezones o_timezones;
 
 public:
   char s_config[MAXVARSIZE];

@@ -10,8 +10,7 @@
 #include "timezones.h"
 
 /** constructor */
-c_timezones::c_timezones(const char* s_timeZone) {
-  f_setConfig(String(s_timeZone));
+c_timezones::c_timezones() {
 }
 
 // For areas with DST - 2 DST rules, example: 10112-7.00,20032-6.00

@@ -6,14 +6,17 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x08
+#define VERSION_MINOR 0x09
+
+// earliest firmware version not requiring the EEPROM reset
+#define VERSION_COMPAT 108
 
 // boolean constants
 //#define FALSE 0x00
 //#define TRUE 0x01
 
 // organization mode or generic Particle device
-#define ORGMODE FALSE
+#define ORGMODE TRUE
 
 // adds debug messages through the serial interface
 #define APPDEBUG TRUE
@@ -35,6 +38,13 @@
 #define PIN_LASER D2
 #define PIN_RELAY D3
 #define PIN_PHOTO A0
+
+// garadget own address - first
+#define PORT_ADDRESS 0x10
+// I2C size of the address range starting from own
+#define PORT_RANGE 0x10
+// I2C message buffer size
+#define PORT_BUFFER 0x20
 
 // delay between sensor scans (mS)
 // more frequent scans result in faster status update but blinking may be

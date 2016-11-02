@@ -9,9 +9,13 @@
 
 #include "timeout.h"
 
- c_timeout::c_timeout(uint16_t n_initialDuration) {
+c_timeout::c_timeout(uint16_t n_initialDuration) {
   if (n_initialDuration)
     f_setDuration(n_initialDuration);
+}
+
+c_timeout::c_timeout(uint16_t* p_newDuration) {
+   f_setDuration(p_newDuration);
 }
 
 void c_timeout::f_setDuration(uint16_t n_newDuration) {
@@ -19,7 +23,7 @@ void c_timeout::f_setDuration(uint16_t n_newDuration) {
     p_duration = &n_duration;
 }
 
-void c_timeout::f_setDuration(uint16_t *p_newDuration) {
+void c_timeout::f_setDuration(uint16_t* p_newDuration) {
     p_duration = p_newDuration;
 }
 
