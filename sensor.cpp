@@ -21,19 +21,22 @@ void c_sensor::f_setParams(uint8_t n_readsParam, uint8_t n_thresholdParam) {
 
 uint8_t c_sensor::f_read() {
 
-  long n_sum1 = 0,
-      n_sum2 = 0;
+  uint32_t n_sumBase = 0,
+      n_sumScan = 0;
 
   for (uint8_t n_read = n_reads; n_read > 0; n_read--) {
     n_base = analogRead(PIN_PHOTO);
-    n_sum1 += n_base;
+    n_sumBase += n_base - DEFAULT_SENSORBIAS;
     digitalWriteFast(PIN_LASER, HIGH);
     delay(1);
-    n_sum2 += n_base - analogRead(PIN_PHOTO);
+    n_sumScan += n_base - analogRead(PIN_PHOTO);
     digitalWriteFast(PIN_LASER, LOW);
     delay(1);
   }
-  n_reflection = !n_sum1 || n_sum2 > n_sum1 ? 0 : (n_sum2 * 100 / n_sum1);
+  // scan valid - recalculate the reflection
+  if (n_sumBase && n_sumScan <= n_sumBase)
+    n_reflection = n_sumScan * 100 / n_sumBase;
+
   return n_reflection;
 }
 

@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x09
+#define VERSION_MINOR 0x0A
 
 // earliest firmware version not requiring the EEPROM reset
 #define VERSION_COMPAT 108
@@ -19,11 +19,11 @@
 #define ORGMODE TRUE
 
 // adds debug messages through the serial interface
-#define APPDEBUG TRUE
+//#define APPDEBUG FALSE
 
 // antenna mode
-//#define ANT_MODE ANT_EXTERNAL
-#define ANT_MODE ANT_INTERNAL
+// #define ANT_MODE ANT_EXTERNAL
+// #define ANT_MODE ANT_INTERNAL
 
 // switches in simulated door mode
 #define APPVIRTUAL FALSE
@@ -63,6 +63,9 @@
 // must be long enough for the door opener to recongnize individual clicks
 #define DEFAULT_RELAYPAUSE 1000
 
+// offsets the base value of sensor reading to improve the contrast in the bright environments
+#define DEFAULT_SENSORBIAS 100
+
 // number of sensor reads, results are averaged
 // can be increased if status is not reliably determined
 #define DEFAULT_SENSORREADS 3
@@ -70,7 +73,7 @@
 // minimum brightness change that triggers the sensor (0-100%)
 // can be adjusted down if target is too far but this can result in false
 // positives if objects cross the beam closer to the device
-#define DEFAULT_SENSORTRESHOLD 25
+#define DEFAULT_SENSORTRESHOLD 15
 
 // bitmap of event notification switches
 // bits corresponding to states declared in enum doorState in the same order
