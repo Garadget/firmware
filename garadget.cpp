@@ -20,7 +20,9 @@
   PRODUCT_ID(PROD_ID);
   PRODUCT_VERSION(VERSION_MAJOR * 100 + VERSION_MINOR);
 #endif
-STARTUP(WiFi.selectAntenna(ANT_MODE));
+#ifdef ANT_MODE
+  STARTUP(WiFi.selectAntenna(ANT_MODE));
+#endif
 
 c_door o_door;
 
