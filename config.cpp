@@ -12,7 +12,7 @@
 /** constructor */
 c_config::c_config() {
   f_load();
-  o_timezones = new c_timezones(a_config.values.s_timeZone);
+  o_timezones.f_setConfig(String(a_config.values.s_timeZone));
   Particle.variable("doorConfig", s_config, STRING);
 }
 
@@ -26,10 +26,14 @@ bool c_config::f_load() {
     a_config.bytes[n_byte] = EEPROM.read(n_byte);
 
   // if integrity check failed then load defaults
-  if (a_config.values.n_versionMajor != VERSION_MAJOR ||
-    a_config.values.n_versionMinor != VERSION_MINOR) {
-    f_reset();
-    return FALSE;
+  if (a_config.values.n_versionMajor != VERSION_MAJOR || a_config.values.n_versionMinor != VERSION_MINOR) {
+    if (a_config.values.n_versionMajor * 100 + a_config.values.n_versionMinor < VERSION_COMPAT) {
+      f_reset();
+      return FALSE;
+    }
+    a_config.values.n_versionMajor = VERSION_MAJOR;
+    a_config.values.n_versionMinor = VERSION_MINOR;
+    f_save();
   }
   f_update();
   return TRUE;
@@ -187,9 +191,9 @@ int8_t c_config::f_set(String s_newConfig) {
       a_config.values.n_alertNightEnd = n_value;
     }
     else if (s_command.equals("tzo")) {
-      if (!o_timezones->f_setConfig(s_value)) {
+      if (!o_timezones.f_setConfig(s_value)) {
         s_value = String(DEFULT_TZDST);
-        o_timezones->f_setConfig(s_value);
+        o_timezones.f_setConfig(s_value);
       }
       #ifdef APPDEBUG
         Serial.print("Updated Timezone, time now: ");
