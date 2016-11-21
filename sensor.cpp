@@ -10,33 +10,14 @@
 #include "sensor.h"
 
 c_sensor::c_sensor() {
-    pinMode(PIN_LASER, OUTPUT);
-    digitalWrite(PIN_LASER, LOW);
+  pinMode(PIN_SENSOR, INPUT_PULLUP);
 }
 
 void c_sensor::f_setParams(uint8_t n_readsParam, uint8_t n_thresholdParam) {
-    n_reads = n_readsParam;
-    n_threshold = n_thresholdParam;
 }
 
 uint8_t c_sensor::f_read() {
-
-  uint32_t n_sumBase = 0,
-      n_sumScan = 0;
-
-  for (uint8_t n_read = n_reads; n_read > 0; n_read--) {
-    n_base = analogRead(PIN_PHOTO);
-    n_sumBase += n_base - DEFAULT_SENSORBIAS;
-    digitalWriteFast(PIN_LASER, HIGH);
-    delay(1);
-    n_sumScan += n_base - analogRead(PIN_PHOTO);
-    digitalWriteFast(PIN_LASER, LOW);
-    delay(1);
-  }
-  // scan valid - recalculate the reflection
-  if (n_sumBase && n_sumScan <= n_sumBase)
-    n_reflection = n_sumScan * 100 / n_sumBase;
-
+  n_reflection = digitalRead(PIN_SENSOR) ? SWITCH_REFLOPEN : SWITCH_REFLCLSD;
   return n_reflection;
 }
 

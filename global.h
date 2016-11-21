@@ -35,16 +35,14 @@
 #define MAXNAMESIZE 31
 
 // pin assignments
+#define PIN_SENSOR D0
 #define PIN_LASER D2
 #define PIN_RELAY D3
 #define PIN_PHOTO A0
 
-// garadget own address - first
-#define PORT_ADDRESS 0x10
-// I2C size of the address range starting from own
-#define PORT_RANGE 0x10
-// I2C message buffer size
-#define PORT_BUFFER 0x20
+// reported reflection levels on sensor closed and open
+#define SWITCH_REFLCLSD 0
+#define SWITCH_REFLOPEN 100
 
 // delay between sensor scans (mS)
 // more frequent scans result in faster status update but blinking may be
