@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.7
+* @version 1.12
 */
 // $Log$
 
@@ -26,8 +26,9 @@ bool c_config::f_load() {
     a_config.bytes[n_byte] = EEPROM.read(n_byte);
 
   // if integrity check failed then load defaults
-  if (a_config.values.n_versionMajor != VERSION_MAJOR || a_config.values.n_versionMinor != VERSION_MINOR) {
-    if (a_config.values.n_versionMajor * 100 + a_config.values.n_versionMinor < VERSION_COMPAT) {
+  uint16_t n_savedVersionId = a_config.values.n_versionMajor * 100 + a_config.values.n_versionMinor;
+  if (n_savedVersionId != VERSION_ID) {
+    if (n_savedVersionId < VERSION_COMPAT || n_savedVersionId > VERSION_ID) {
       f_reset();
       return FALSE;
     }
@@ -71,6 +72,7 @@ int8_t c_config::f_reset() {
   a_config.values.n_alertNightStart = DEFAULT_ALERTNIGHTSTART;
   a_config.values.n_alertNightEnd = DEFAULT_ALERTNIGHTEND;
   strcpy(a_config.values.s_timeZone, DEFULT_TZDST);
+  strcpy(a_config.values.s_deviceName, DEFAULT_NAME);
   return f_save();
 }
 

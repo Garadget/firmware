@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garadget main file
- * @version 1.9
+ * @version 1.12
  * @author Denis Grisak
  * @license GPL v3
 
@@ -11,6 +11,9 @@
  */
 // $Log$
 
+// @todo: validate configuration settings when Loading
+// @todo: debounce the status messages
+
 #include "application.h"
 #include "global.h"
 #include "door.h"
@@ -18,7 +21,7 @@
 // Particle platform - product settings
 #ifdef ORGMODE
   PRODUCT_ID(PROD_ID);
-  PRODUCT_VERSION(VERSION_MAJOR * 100 + VERSION_MINOR);
+  PRODUCT_VERSION(VERSION_ID);
 #endif
 #ifdef ANT_MODE
   STARTUP(WiFi.selectAntenna(ANT_MODE));

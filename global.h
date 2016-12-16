@@ -6,7 +6,8 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x0A
+#define VERSION_MINOR 0x0C
+#define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
 #define VERSION_COMPAT 108
@@ -90,5 +91,8 @@
 
 // default timezone/DST
 #define DEFULT_TZDST "10112-7,20032-6"
+
+// default device name
+#define DEFAULT_NAME "Garage"
 
 #endif
