@@ -26,7 +26,7 @@ uint8_t c_sensor::f_read() {
 
   for (uint8_t n_read = n_reads; n_read > 0; n_read--) {
     n_base = analogRead(PIN_PHOTO);
-    n_sumBase += n_base - DEFAULT_SENSORBIAS;
+    n_sumBase += n_base - SENSOR_BIAS;
     digitalWriteFast(PIN_LASER, HIGH);
     delay(1);
     n_sumScan += n_base - analogRead(PIN_PHOTO);
