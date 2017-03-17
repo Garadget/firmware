@@ -45,9 +45,13 @@ void c_door::f_init() {
   Particle.subscribe("spark/", &c_door::f_handleEvent, this);
   o_config.f_requestName();
 
+  // configure mqtt client
+  o_mqttClient.mqttInit();
+
   #ifdef APPDEBUG
     Serial.println("Door Init");
   #endif
+
 }
 
 /**
@@ -72,6 +76,12 @@ void c_door::f_process() {
     f_processAlertTimeout();
     f_processAlertNight();
     o_scanTimeout.f_start();
+
+    // mqttLoop returns the mqtt payload received if there is any, else NULL
+    String temp_state = o_mqttClient.mqttLoop();
+    if ( temp_state != NULL ) {
+      f_receiveState(temp_state);
+    }
   }
 
   // hanle motion timeout
@@ -249,6 +259,7 @@ c_door::doorState c_door::f_getState() {
 int c_door::f_receiveState(String s_state) {
 
   #ifdef APPDEBUG
+    Particle.publish("Received State Request: ", s_state, 60, PRIVATE);
     Serial.printf("Received State Request: %s\r\n", s_state.c_str());
   #endif
 
@@ -351,6 +362,10 @@ c_door::doorState c_door::f_setState(doorState n_requestedState) {
 void c_door::f_publishEvent(doorState n_event) {
   String s_event = f_translateState(n_event);
   Particle.publish("state", s_event, 60, PRIVATE);
+
+  // here comes the MQTT publish
+  o_mqttClient.mqttPublishDoorState(s_event);
+  
   #ifdef APPDEBUG
     Serial.printf("Published New State: %s\r\n", s_event.c_str());
   #endif

@@ -15,6 +15,7 @@
 #include "config.h"
 #include "timeout.h"
 #include "sensor.h"
+#include "mqttClient.h"
 
 class c_door {
 
@@ -47,6 +48,8 @@ protected:
     c_timeout o_motionTimeout;
     c_timeout o_relayOnTimeout;
     c_timeout o_relayOffTimeout;
+
+    c_mqttClient o_mqttClient;
 
     void f_motionTimeout();
     void f_relayOn(uint8_t n_clicks = 0);

@@ -17,17 +17,24 @@
 //#define TRUE 0x01
 
 // organization mode or generic Particle device
-#define ORGMODE TRUE
+// #define ORGMODE TRUE
+// Gustavo was here
+#define ORGMODE FALSE
 
 // adds debug messages through the serial interface
-// #define APPDEBUG TRUE
+#define APPDEBUG TRUE
 
 // antenna mode
 // #define ANT_MODE ANT_EXTERNAL
 // #define ANT_MODE ANT_INTERNAL
 
 // switches in simulated door mode
-#define APPVIRTUAL FALSE
+// #define APPVIRTUAL FALSE
+
+// Gustavo was here
+// define this to true to simulate laser
+#define APPVIRTUAL TRUE
+
 
 // maximum payload size for variable according to spark.io documentation
 #define MAXVARSIZE 622
@@ -52,5 +59,7 @@
 // offsets the base value of sensor reading to improve the contrast in the bright environments
 #define SENSOR_BIAS 100
 
+// adds MQTT functionality
+#define MQTT_ENABLED TRUE
 
 #endif
