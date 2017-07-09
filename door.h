@@ -18,52 +18,55 @@
 
 class c_door {
 
-    enum doorState {
-        STATE_CLOSED,
-        STATE_OPEN,
-        STATE_CLOSING,
-        STATE_OPENING,
-        STATE_STOPPED,
-        STATE_INIT,
-        STATE_ONLINE,
-        STATE_OFFLINE,
-        STATE_CONFIG,
-        STATE_UNKNOWN
-    };
+  enum doorState {
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_CLOSING,
+    STATE_OPENING,
+    STATE_STOPPED,
+    STATE_INIT,
+    STATE_ONLINE,
+    STATE_OFFLINE,
+    STATE_CONFIG,
+    STATE_UNKNOWN
+  };
 
 protected:
-    char s_doorStatus[MAXVARSIZE];
-    char s_netConfig[MAXVARSIZE];
-    uint32_t n_lastEvent = 0;
-    doorState n_doorState = STATE_OPEN;
-    uint8_t n_relayClicksLeft;
-    bool b_initialized = false;
-    bool b_alertFiredTimeout = false;
-    bool b_alertFiredNight = false;
+  char s_doorStatus[MAXVARSIZE];
+  char s_netConfig[MAXVARSIZE];
+  uint32_t n_lastEvent = 0;
+  doorState n_doorState = STATE_OPEN;
+  uint8_t n_relayClicksLeft;
+  bool b_initialized = false;
+  bool b_alertFiredTimeout = false;
+  bool b_alertFiredNight = false;
 
-    c_config o_config;
-    c_sensor o_sensor;
-    c_timeout o_scanTimeout;
-    c_timeout o_motionTimeout;
-    c_timeout o_relayOnTimeout;
-    c_timeout o_relayOffTimeout;
+  c_config& o_config = c_config::f_getInstance();
+  c_sensor o_sensor;
+  c_timeout o_scanTimeout;
+  c_timeout o_motionTimeout;
+  c_timeout o_relayOnTimeout;
+  c_timeout o_relayOffTimeout;
 
-    void f_motionTimeout();
-    void f_relayOn(uint8_t n_clicks = 0);
-    void f_relayOff();
-    doorState f_translateState(String s_state);
-    String f_translateState(doorState n_state);
-    void f_publishEvent(doorState n_event);
-    void f_publishState();
-    void f_publishAlert(const char* s_type, const char* s_data);
-    bool f_prepNetConfig();
-    void f_prepStatus();
-    void f_formatTime(uint32_t n_time, char* s_time);
-    void f_processAlertTimeout();
-    void f_processAlertNight();
+  c_door();
+  void f_motionTimeout();
+  void f_relayOn(uint8_t n_clicks = 0);
+  void f_relayOff();
+  doorState f_translateState(String s_state);
+  String f_translateState(doorState n_state);
+  void f_publishEvent(doorState n_event);
+  void f_publishState();
+  void f_publishAlert(const char* s_type, const char* s_data);
+  bool f_prepNetConfig();
+  void f_prepStatus();
+  void f_formatTime(uint32_t n_time, char* s_time);
+  void f_processAlertTimeout();
+  void f_processAlertNight();
 
  public:
-    c_door();
+    static c_door& f_getDoor();
+    c_door(c_door const&);
+    void operator=(c_door const&);
     void f_init();
     void f_process();
     doorState f_getState();

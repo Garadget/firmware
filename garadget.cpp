@@ -17,6 +17,8 @@
 #include "application.h"
 #include "global.h"
 #include "door.h"
+#include "webconfig.h"
+STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
 
 // Particle platform - product settings
 #ifdef ORGMODE
@@ -27,7 +29,7 @@
   STARTUP(WiFi.selectAntenna(ANT_MODE));
 #endif
 
-c_door o_door;
+c_door& o_door = c_door::f_getDoor();
 
 void setup() {
   #ifdef APPDEBUG

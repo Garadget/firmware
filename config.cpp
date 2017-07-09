@@ -9,6 +9,11 @@
 
 #include "config.h"
 
+c_config& c_config::f_getInstance() {
+  static c_config o_config;
+  return o_config;
+}
+
 /** constructor */
 c_config::c_config() {
   f_load();
@@ -60,7 +65,16 @@ void c_config::f_save() {
 int8_t c_config::f_reset() {
   a_config.n_versionMajor = VERSION_MAJOR;
   a_config.n_versionMinor = VERSION_MINOR;
-  return f_parse(DEFULT_CONFIG, FALSE) + 2;
+
+  a_config.n_mqttOnly = 0;
+  a_config.n_mqttBrokerIp[0] = 0;
+  a_config.n_mqttBrokerIp[1] = 0;
+  a_config.n_mqttBrokerIp[2] = 0;
+  a_config.n_mqttBrokerIp[3] = 0;
+  a_config.n_mqttBrokerPort = MQTT_PORT;
+  a_config.n_mqttTimeout = MQTT_TIMEOUT;
+
+  return f_parse(DEFULT_CONFIG, FALSE) + 5;
 }
 
 /**
@@ -266,6 +280,49 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
   }
 
   return -1;
+}
+
+void c_config::f_getJsonConfig(char* s_buffer) {
+
+  WiFiAccessPoint a_accessPoints[1];
+  int n_accessPoints = WiFi.getCredentials(a_accessPoints, 1);
+
+  byte a_macAddress[6];
+  WiFi.macAddress(a_macAddress);
+
+  #ifdef APPDEBUG
+  for (int i = 0; i < 6; i++)
+    Serial.printf("%02x%s", a_macAddress[i], i != 5 ? ":" : "");
+  #endif
+
+  sprintf(
+    s_buffer,
+    "{\"id\":\"%s\",\"ver\":\"%u.%u\",\"mac\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srr\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqon\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
+    System.deviceID().c_str(), // +32b
+    a_config.n_versionMajor,
+    a_config.n_versionMinor,
+    a_macAddress[0],
+    a_macAddress[1],
+    a_macAddress[2],
+    a_macAddress[3],
+    a_macAddress[4],
+    a_macAddress[5], // + 26b
+    n_accessPoints ? a_accessPoints[0].ssid : "", // +41b
+    a_config.n_readTime,
+    a_config.n_motionTime,
+    a_config.n_relayTime,
+    a_config.n_relayPause,
+    a_config.n_sensorReads,
+    a_config.n_sensorThreshold,
+    a_config.s_deviceName,
+    a_config.n_mqttOnly,
+    a_config.n_mqttBrokerIp[0],
+    a_config.n_mqttBrokerIp[1],
+    a_config.n_mqttBrokerIp[2],
+    a_config.n_mqttBrokerIp[3],
+    a_config.n_mqttBrokerPort,
+    a_config.n_mqttTimeout
+  );
 }
 
 /**

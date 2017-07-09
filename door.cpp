@@ -9,6 +9,11 @@
 
 #include "door.h"
 
+c_door& c_door::f_getDoor() {
+  static c_door o_door;
+  return o_door;
+}
+
 /** constructor */
 c_door::c_door() {
   pinMode(PIN_RELAY, OUTPUT);

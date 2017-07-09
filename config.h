@@ -32,15 +32,22 @@ class c_config {
     uint16_t n_alertNightEnd;
     char s_timeZone[25];
     char s_deviceName[MAXNAMESIZE];
+    uint8_t n_mqttOnly;
+    uint8_t n_mqttBrokerIp[4];
+    uint16_t n_mqttBrokerPort;
+    uint16_t n_mqttTimeout;
   } doorConfig;
 
 protected:
   c_timezones o_timezones;
 
 public:
+  static c_config& f_getInstance();
+  c_config(c_config const&);
+  void operator=(c_config const&);
+
   doorConfig a_config;
   char s_config[MAXVARSIZE];
-  c_config();
 
 /**
  * Parses the provided string and saves values to device's config'
@@ -69,7 +76,14 @@ public:
    */
   void f_setName(String s_name);
 
+  /**
+   * Returns JSON for current config
+   * @param[in] s_buffer Buffer for JSON result
+   */
+  void f_getJsonConfig(char* s_buffer);
+
 protected:
+  c_config();
   bool f_load();
   void f_save();
   int8_t f_validate();

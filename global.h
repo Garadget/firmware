@@ -20,7 +20,7 @@
 #define ORGMODE TRUE
 
 // adds debug messages through the serial interface
-// #define APPDEBUG TRUE
+#define APPDEBUG TRUE
 
 // antenna mode
 // #define ANT_MODE ANT_EXTERNAL
@@ -39,6 +39,9 @@
 #define PIN_LASER D2
 #define PIN_RELAY D3
 #define PIN_PHOTO A0
+
+#define MQTT_PORT 1883
+#define MQTT_TIMEOUT 5000
 
 // garadget own address - first
 #define PORT_ADDRESS 0x10
