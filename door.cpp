@@ -19,15 +19,15 @@ void c_door::f_init() {
 
   // configure sensor
   o_sensor.f_setParams(
-    o_config.a_config.values.n_sensorReads,
-    o_config.a_config.values.n_sensorThreshold
+    o_config.a_config.n_sensorReads,
+    o_config.a_config.n_sensorThreshold
   );
 
   // configure timers
-  o_scanTimeout.f_setDuration(&o_config.a_config.values.n_readTime);
-  o_motionTimeout.f_setDuration(&o_config.a_config.values.n_motionTime);
-  o_relayOnTimeout.f_setDuration(&o_config.a_config.values.n_relayTime);
-  o_relayOffTimeout.f_setDuration(&o_config.a_config.values.n_relayPause);
+  o_scanTimeout.f_setDuration(&o_config.a_config.n_readTime);
+  o_motionTimeout.f_setDuration(&o_config.a_config.n_motionTime);
+  o_relayOnTimeout.f_setDuration(&o_config.a_config.n_relayTime);
+  o_relayOffTimeout.f_setDuration(&o_config.a_config.n_relayPause);
 
   while (Time.year() <= 1970) {
     delay(200);
@@ -85,11 +85,11 @@ void c_door::f_process() {
 void c_door::f_processAlertTimeout() {
 
   //  skip if door closed, already fired or disabled
-  if (n_doorState == STATE_CLOSED || b_alertFiredTimeout || !o_config.a_config.values.n_alertOpenTimeout)
+  if (n_doorState == STATE_CLOSED || b_alertFiredTimeout || !o_config.a_config.n_alertOpenTimeout)
     return;
 
   uint32_t n_time = Time.now() - n_lastEvent;
-  if (n_time < o_config.a_config.values.n_alertOpenTimeout)
+  if (n_time < o_config.a_config.n_alertOpenTimeout)
     return;
 
   char s_time[10];
@@ -105,12 +105,12 @@ void c_door::f_processAlertNight() {
 
   //  skip if door closed, already fired time not initialized or disabled
   if (n_doorState == STATE_CLOSED || b_alertFiredNight || !n_lastEvent
-    || o_config.a_config.values.n_alertNightStart == o_config.a_config.values.n_alertNightEnd)
+    || o_config.a_config.n_alertNightStart == o_config.a_config.n_alertNightEnd)
     return;
 
   uint16_t n_time = Time.hour() * 60 + Time.minute();
-  uint16_t n_start = o_config.a_config.values.n_alertNightStart;
-  uint16_t n_end = o_config.a_config.values.n_alertNightEnd;
+  uint16_t n_start = o_config.a_config.n_alertNightStart;
+  uint16_t n_end = o_config.a_config.n_alertNightEnd;
 
   // period crossing overnight
   if (n_start > n_end && n_time < n_start && n_time > n_end)
@@ -354,7 +354,7 @@ void c_door::f_publishEvent(doorState n_event) {
   #ifdef APPDEBUG
     Serial.printf("Published New State: %s\r\n", s_event.c_str());
   #endif
-  if (o_config.a_config.values.n_alertEvents & 0x01 << n_event)
+  if (o_config.a_config.n_alertEvents & 0x01 << n_event)
     f_publishAlert("state", s_event.c_str());
 }
 
@@ -375,7 +375,7 @@ void c_door::f_publishAlert(const char* s_type, const char* s_data) {
   sprintf(
     s_alertData,
     "{\"name\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}",
-    o_config.a_config.values.s_deviceName,
+    o_config.a_config.s_deviceName,
     s_type,
     s_data
   );
@@ -437,10 +437,11 @@ void c_door::f_prepStatus() {
   f_formatTime(n_time, s_time);
   sprintf(
     s_doorStatus,
-    "status=%s|time=%s|sensor=%u|signal=%d",
+    "status=%s|time=%s|sensor=%u|base=%u|signal=%d",
     f_translateState(n_doorState).c_str(),
     s_time,
     o_sensor.f_getReflection(),
+    o_sensor.f_getBase(),
     WiFi.RSSI()
   );
 }
@@ -466,9 +467,9 @@ void c_door::f_formatTime(uint32_t n_time, char* s_time) {
  * Processes the config update request
  */
 int c_door::f_receiveConfig(String s_config) {
-  int8_t n_updates = o_config.f_set(s_config);
+  int8_t n_updates = o_config.f_parse(s_config, FALSE);
   #ifdef APPDEBUG
-    Serial.printf("Config update: %s, EEPROM bytes updated: %u \r\n", s_config, n_updates);
+    Serial.printf("Config update: %s, values updated: %u \r\n", s_config.c_str(), n_updates);
   #endif
 
   if (!n_updates)
@@ -476,8 +477,8 @@ int c_door::f_receiveConfig(String s_config) {
 
   // configure sensor
   o_sensor.f_setParams(
-    o_config.a_config.values.n_sensorReads,
-    o_config.a_config.values.n_sensorThreshold
+    o_config.a_config.n_sensorReads,
+    o_config.a_config.n_sensorThreshold
   );
   f_publishAlert("config", o_config.s_config);
   return n_updates;

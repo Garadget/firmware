@@ -5,8 +5,9 @@
 #define PROD_ID 355
 
 // firmware version for EEPROM data integrity check
-#define VERSION_MAJOR 0x01
-#define VERSION_MINOR 0x0A
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 14
+#define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
 #define VERSION_COMPAT 108
@@ -19,7 +20,7 @@
 #define ORGMODE TRUE
 
 // adds debug messages through the serial interface
-//#define APPDEBUG FALSE
+// #define APPDEBUG TRUE
 
 // antenna mode
 // #define ANT_MODE ANT_EXTERNAL
@@ -36,57 +37,13 @@
 
 // pin assignments
 #define PIN_SENSOR D0
-#define PIN_LASER D2
 #define PIN_RELAY D3
-#define PIN_PHOTO A0
 
 // reported reflection levels on sensor closed and open
-#define SWITCH_REFLCLSD 0
-#define SWITCH_REFLOPEN 100
+#define SWITCH_REFLCLSD 100
+#define SWITCH_REFLOPEN 0
 
-// delay between sensor scans (mS)
-// more frequent scans result in faster status update but blinking may be
-// irritating to the consumer
-#define DEFAULT_READTIME 1000
+#define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=15|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage"
 
-// expected time for the door to complete full open or close (mS)
-// should be set to how long it takes for the door to fully open
-#define DEFAULT_MOTIONTIME 10000
-
-// time for garage door button press (mS)
-// must be long enough enough for the door opener to register the click
-#define DEFAULT_RELAYTIME 300
-
-// minimum time between garage door button presses (mS)
-// must be long enough for the door opener to recongnize individual clicks
-#define DEFAULT_RELAYPAUSE 1000
-
-// offsets the base value of sensor reading to improve the contrast in the bright environments
-#define DEFAULT_SENSORBIAS 100
-
-// number of sensor reads, results are averaged
-// can be increased if status is not reliably determined
-#define DEFAULT_SENSORREADS 3
-
-// minimum brightness change that triggers the sensor (0-100%)
-// can be adjusted down if target is too far but this can result in false
-// positives if objects cross the beam closer to the device
-#define DEFAULT_SENSORTRESHOLD 15
-
-// bitmap of event notification switches
-// bits corresponding to states declared in enum doorState in the same order
-#define DEFAULT_ALERTEVENTS 0x00
-
-// time in seconds for door to remain open before alert is sent
-// 0 disables the alert
-#define DEFAULT_ALERTOPENTIMEOUT 0
-
-// time in minutes for beginning and end of night alert timeframe
-// equal values disable alert
-#define DEFAULT_ALERTNIGHTSTART 0
-#define DEFAULT_ALERTNIGHTEND 0
-
-// default timezone/DST
-#define DEFULT_TZDST "10112-7,20032-6"
 
 #endif

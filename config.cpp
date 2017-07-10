@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.7
+* @version 1.12
 */
 // $Log$
 
@@ -12,7 +12,7 @@
 /** constructor */
 c_config::c_config() {
   f_load();
-  o_timezones.f_setConfig(String(a_config.values.s_timeZone));
+  o_timezones.f_setConfig(String(a_config.s_timeZone));
   Particle.variable("doorConfig", s_config, STRING);
 }
 
@@ -22,56 +22,45 @@ c_config::c_config() {
 bool c_config::f_load() {
 
   // read door config from EEPROM
-  for (uint8_t n_byte = 0; n_byte < sizeof(configStruct); n_byte++)
-    a_config.bytes[n_byte] = EEPROM.read(n_byte);
+  EEPROM.get(0, a_config);
+  f_validate();
 
   // if integrity check failed then load defaults
-  if (a_config.values.n_versionMajor != VERSION_MAJOR || a_config.values.n_versionMinor != VERSION_MINOR) {
-    if (a_config.values.n_versionMajor * 100 + a_config.values.n_versionMinor < VERSION_COMPAT) {
+  uint16_t n_savedVersionId = a_config.n_versionMajor * 100 + a_config.n_versionMinor;
+  if (n_savedVersionId != VERSION_ID) {
+    if (n_savedVersionId < VERSION_COMPAT || n_savedVersionId > VERSION_ID) {
       f_reset();
       return FALSE;
     }
-    a_config.values.n_versionMajor = VERSION_MAJOR;
-    a_config.values.n_versionMinor = VERSION_MINOR;
+    a_config.n_versionMajor = VERSION_MAJOR;
+    a_config.n_versionMinor = VERSION_MINOR;
     f_save();
   }
-  f_update();
   return TRUE;
+}
+
+/**
+* validates the current configuration against the boundaries
+*/
+int8_t c_config::f_validate() {
+  f_update();
+  return f_parse(String(s_config), TRUE);
 }
 
 /**
 * Saves updated configuration variables to EEPROM
 */
-int8_t c_config::f_save() {
-  uint8_t n_updates = 0;
-  for (uint8_t n_byte = 0; n_byte < sizeof(configStruct); n_byte++) {
-    if (a_config.bytes[n_byte] != EEPROM.read(n_byte)) {
-      EEPROM.write(n_byte, a_config.bytes[n_byte]);
-      n_updates++;
-    }
-  }
-  f_update();
-  return n_updates;
+void c_config::f_save() {
+  EEPROM.put(0, a_config);
 }
 
 /**
 * Loads configuration with default values
 */
 int8_t c_config::f_reset() {
-  a_config.values.n_versionMajor = VERSION_MAJOR;
-  a_config.values.n_versionMinor = VERSION_MINOR;
-  a_config.values.n_readTime = DEFAULT_READTIME;
-  a_config.values.n_motionTime = DEFAULT_MOTIONTIME;
-  a_config.values.n_relayTime = DEFAULT_RELAYTIME;
-  a_config.values.n_relayPause = DEFAULT_RELAYPAUSE;
-  a_config.values.n_sensorReads = DEFAULT_SENSORREADS;
-  a_config.values.n_sensorThreshold = DEFAULT_SENSORTRESHOLD;
-  a_config.values.n_alertEvents = DEFAULT_ALERTEVENTS;
-  a_config.values.n_alertOpenTimeout = DEFAULT_ALERTOPENTIMEOUT;
-  a_config.values.n_alertNightStart = DEFAULT_ALERTNIGHTSTART;
-  a_config.values.n_alertNightEnd = DEFAULT_ALERTNIGHTEND;
-  strcpy(a_config.values.s_timeZone, DEFULT_TZDST);
-  return f_save();
+  a_config.n_versionMajor = VERSION_MAJOR;
+  a_config.n_versionMinor = VERSION_MINOR;
+  return f_parse(DEFULT_CONFIG, FALSE) + 2;
 }
 
 /**
@@ -82,27 +71,27 @@ void c_config::f_update() {
   sprintf(
     s_config,
     "ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%s|nme=%s",
-    a_config.values.n_versionMajor,
-    a_config.values.n_versionMinor,
-    a_config.values.n_readTime,
-    a_config.values.n_motionTime,
-    a_config.values.n_relayTime,
-    a_config.values.n_relayPause,
-    a_config.values.n_sensorReads,
-    a_config.values.n_sensorThreshold,
-    a_config.values.n_alertEvents,
-    a_config.values.n_alertOpenTimeout,
-    a_config.values.n_alertNightStart,
-    a_config.values.n_alertNightEnd,
-    a_config.values.s_timeZone,
-    a_config.values.s_deviceName
+    a_config.n_versionMajor,
+    a_config.n_versionMinor,
+    a_config.n_readTime,
+    a_config.n_motionTime,
+    a_config.n_relayTime,
+    a_config.n_relayPause,
+    a_config.n_sensorReads,
+    a_config.n_sensorThreshold,
+    a_config.n_alertEvents,
+    a_config.n_alertOpenTimeout,
+    a_config.n_alertNightStart,
+    a_config.n_alertNightEnd,
+    a_config.s_timeZone,
+    a_config.s_deviceName
   );
 }
 
 /**
 * Parses received configuration string and updates the values
 */
-int8_t c_config::f_set(String s_newConfig) {
+int8_t c_config::f_parse(String s_newConfig, bool b_validate = false) {
 
   if (s_newConfig.equals("defaults")) {
     #ifdef APPDEBUG
@@ -111,14 +100,14 @@ int8_t c_config::f_set(String s_newConfig) {
     return f_reset();
   }
 
-  int n_start = 0, n_end, n_value;
-  String s_command, s_value;
+  int n_updates = 0, n_result, n_start = 0, n_end;
+  String s_param, s_value;
 
   do {
     n_end = s_newConfig.indexOf('=', n_start);
     if (n_end == -1)
       return -1;
-    s_command = s_newConfig.substring(n_start, n_end).c_str();
+    s_param = s_newConfig.substring(n_start, n_end).c_str();
     n_start = n_end + 1;
 
     n_end = s_newConfig.indexOf('|', n_start);
@@ -130,80 +119,153 @@ int8_t c_config::f_set(String s_newConfig) {
       n_start = n_end + 1;
     }
 
-    if (s_command.equals("nme")) {
-      c_config::f_setName(s_value);
-    }
-    else if (s_command.equals("rdt")) {
-      n_value = s_value.toInt();
-      if (n_value < 200 || n_value > 60000)
-        n_value = DEFAULT_READTIME;
-      a_config.values.n_readTime = n_value;
-    }
-    else if (s_command.equals("mtt")) {
-      n_value = s_value.toInt();
-      if (n_value < 500 || n_value > 120000)
-        n_value = DEFAULT_MOTIONTIME;
-      a_config.values.n_motionTime = n_value;
-    }
-    else if (s_command.equals("rlt")) {
-      n_value = s_value.toInt();
-      if (n_value < 10 || n_value > 2000)
-        n_value = DEFAULT_RELAYTIME;
-      a_config.values.n_relayTime = n_value;
-    }
-    else if (s_command.equals("rlp")) {
-      n_value = s_value.toInt();
-      if (n_value < 10 || n_value > 5000)
-        n_value = DEFAULT_RELAYPAUSE;
-      a_config.values.n_relayPause = n_value;
-    }
-    else if (s_command.equals("srr")) {
-      n_value = s_value.toInt();
-      if (n_value < 1 || n_value > 20)
-        n_value = DEFAULT_SENSORREADS;
-      a_config.values.n_sensorReads = n_value;
-    }
-    else if (s_command.equals("srt")) {
-      n_value = s_value.toInt();
-      if (n_value < 1 || n_value > 80)
-        n_value = DEFAULT_SENSORTRESHOLD;
-      a_config.values.n_sensorThreshold = n_value;
-    }
-    else if (s_command.equals("aev")) {
-      a_config.values.n_alertEvents = s_value.toInt();
-    }
-    else if (s_command.equals("aot")) {
-      n_value = s_value.toInt();
-      if (n_value > 43200)
-        n_value = DEFAULT_ALERTOPENTIMEOUT;
-      a_config.values.n_alertOpenTimeout = n_value;
-    }
-    else if (s_command.equals("ans")) {
-      n_value = s_value.toInt();
-      if (n_value >= 1440)
-        n_value = DEFAULT_ALERTNIGHTSTART;
-      a_config.values.n_alertNightStart = n_value;
-    }
-    else if (s_command.equals("ane")) {
-      n_value = s_value.toInt();
-      if (n_value >= 1440)
-        n_value = DEFAULT_ALERTNIGHTEND;
-      a_config.values.n_alertNightEnd = n_value;
-    }
-    else if (s_command.equals("tzo")) {
-      if (!o_timezones.f_setConfig(s_value)) {
-        s_value = String(DEFULT_TZDST);
-        o_timezones.f_setConfig(s_value);
-      }
-      #ifdef APPDEBUG
-        Serial.print("Updated Timezone, time now: ");
-        Serial.println(Time.timeStr());
-      #endif
-      s_value.toCharArray(a_config.values.s_timeZone, 25);
-    }
+    n_result = f_setValue(s_param, s_value);
+    if (b_validate && n_result < 0)
+      return f_reset();
+
+    if (n_result > 0)
+      n_updates++;
   }
   while (n_end != -1);
-  return f_save();
+
+  if (n_updates) {
+    f_update();
+    f_save();
+  }
+  return n_updates;
+}
+
+int8_t c_config::f_setValue(String s_param, String s_value) {
+
+  int n_value;
+
+  if (s_param.equals("ver")) {
+    return 0;
+  }
+
+  if (s_param.equals("nme")) {
+    if (s_value.equals(a_config.s_deviceName))
+      return 0;
+    c_config::f_setName(s_value);
+    return 1;
+  }
+
+  if (s_param.equals("rdt")) {
+    n_value = s_value.toInt();
+    if (n_value < 200 || n_value > 60000)
+      return -1;
+    if (n_value == a_config.n_readTime)
+      return 0;
+    a_config.n_readTime = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("mtt")) {
+    n_value = s_value.toInt();
+    if (n_value < 5000 || n_value > 60000)
+      return -1;
+    if (n_value == a_config.n_motionTime)
+      return 0;
+    a_config.n_motionTime = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("rlt")) {
+    n_value = s_value.toInt();
+    if (n_value < 10 || n_value > 2000)
+      return -1;
+    if (n_value == a_config.n_relayTime)
+      return 0;
+    a_config.n_relayTime = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("rlp")) {
+    n_value = s_value.toInt();
+    if (n_value < 10 || n_value > 5000)
+      return -1;
+    if (n_value == a_config.n_relayPause)
+      return 0;
+    a_config.n_relayPause = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("srr")) {
+    n_value = s_value.toInt();
+    if (n_value < 1 || n_value > 20)
+      return -1;
+    if (n_value == a_config.n_sensorReads)
+      return 0;
+    a_config.n_sensorReads = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("srt")) {
+    n_value = s_value.toInt();
+    if (n_value < 1 || n_value > 80)
+      return -1;
+    if (n_value == a_config.n_sensorThreshold)
+      return 0;
+    a_config.n_sensorThreshold = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("aev")) {
+    n_value = s_value.toInt();
+    if (n_value > 0b111111111)
+      return -1;
+    if (n_value == a_config.n_alertEvents)
+      return 0;
+    a_config.n_alertEvents = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("aot")) {
+    n_value = s_value.toInt();
+    if (n_value > 43200)
+      return -1;
+    if (n_value == a_config.n_alertOpenTimeout)
+      return 0;
+
+    a_config.n_alertOpenTimeout = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("ans")) {
+    n_value = s_value.toInt();
+    if (n_value >= 1440)
+      return -1;
+    if (n_value == a_config.n_alertNightStart)
+      return 0;
+    a_config.n_alertNightStart = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("ane")) {
+    n_value = s_value.toInt();
+    if (n_value >= 1440)
+      return -1;
+    if (n_value == a_config.n_alertNightEnd)
+      return 0;
+    a_config.n_alertNightEnd = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("tzo")) {
+    if (!o_timezones.f_setConfig(s_value))
+      return -1;
+
+    if (s_value.equals(a_config.s_timeZone))
+      return 0;
+    #ifdef APPDEBUG
+      Serial.print("Updated Timezone, time now: ");
+      Serial.println(Time.timeStr());
+    #endif
+    s_value.toCharArray(a_config.s_timeZone, 25);
+    return 1;
+  }
+
+  return -1;
 }
 
 /**
@@ -217,7 +279,7 @@ void c_config::f_requestName() {
 * Saves specified string as device name
 */
 void c_config::f_setName(String s_name) {
-  s_name.replace('_', ' ').toCharArray(a_config.values.s_deviceName, MAXNAMESIZE);
+  s_name.replace('_', ' ').toCharArray(a_config.s_deviceName, MAXNAMESIZE);
   #ifdef APPDEBUG
     Serial.print("Renamed to ");
     Serial.println(s_name);
