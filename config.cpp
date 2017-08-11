@@ -84,7 +84,8 @@ void c_config::f_update() {
 
   sprintf(
     s_config,
-    "ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%s|nme=%s",
+    "sys=%s|ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%s|nme=%s",
+    System.version().c_str(),
     a_config.n_versionMajor,
     a_config.n_versionMinor,
     a_config.n_readTime,
@@ -297,10 +298,11 @@ void c_config::f_getJsonConfig(char* s_buffer) {
 
   sprintf(
     s_buffer,
-    "{\"id\":\"%s\",\"ver\":\"%u.%u\",\"mac\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srr\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqon\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
-    System.deviceID().c_str(), // +32b
+    "{\"sys\":\"%s\",\"ver\":\"%u.%u\",\"id\":\"%s\",\"mac\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srr\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqon\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
+    System.version().c_str(), // +11b
     a_config.n_versionMajor,
     a_config.n_versionMinor,
+    System.deviceID().c_str(), // +32b
     a_macAddress[0],
     a_macAddress[1],
     a_macAddress[2],

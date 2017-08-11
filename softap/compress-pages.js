@@ -9,7 +9,8 @@ var a_cssFiles = [
 ];
 
 var a_jsFiles = [
-	{ source: 'config.js', regexp: /^const char s_configJs\[\] = \"(.*)\";/ }
+	{ source: 'config1.js', regexp: /^const char s_config1Js\[\] = \"(.*)\";/ },
+	{ source: 'config2.js', regexp: /^const char s_config2Js\[\] = \"(.*)\";/ }
 ];
 
 
