@@ -4,6 +4,7 @@
   <title>Soft AP configuration</title>
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="config.css">
+  <script>var f_copyId = f_togglePass = f_apChange = f_mqttChange = f_formSubmit = function(){};</script>
 </head>
 <body>
   <div class="header">
@@ -14,8 +15,8 @@
       </div>
     </div>
     <div class="messages">
-      <div class="error-box" id="error-box" style="display:none;"></div>
-      <div class="message-box" id="message-box" style="display:none;"></div>
+      <ul class="error-box" id="error-box" style="display:none;"></ul>
+      <ul class="message-box" id="message-box" style="display:none;"></ul>
     </div>
     <div class="gradient-header"></div>
   </div>
@@ -56,7 +57,7 @@
       <div class="form-row">
         <label>SSID:</label>
         <div class="input-action">
-          <ul class="radio-group" id="aplist">
+          <ul class="radio-group" id="aplist" onclick="f_apChange()">
             <li>Loading...</li>
           </ul>
           <object type="image/svg+xml" data="refresh.svg"></object>
@@ -81,16 +82,16 @@
       <h2>MQTT</h2>
       <div class="form-row">
         <label>Mode:</label>
-        <ul class="radio-group">
-          <li><input type="radio" name="mqtt" value="mc" /> <div>MQTT + Cloud</div></li>
-          <li><input type="radio" name="mqtt" value="m" /> <div>Only MQTT</div></li>
-          <li><input type="radio" name="mqtt" value="c" checked="" /> <div>Only Cloud</div></li>
+        <ul class="radio-group" onclick="f_mqttChange()">
+          <li><input type="radio" name="mqtt" value="3" /> <div>MQTT + Cloud</div></li>
+          <li><input type="radio" name="mqtt" value="2" /> <div>Only MQTT</div></li>
+          <li><input type="radio" name="mqtt" value="1" checked /> <div>Only Cloud</div></li>
         </ul>
       </div>
-      <div id="box-mqtt" style="display:block;">
+      <div id="box-mqtt" style="display:none;">
         <div class="form-row">
           <label>Broker IP:</label>
-          <input type="text" name="mqip" value="" />
+          <input type="text" name="mqip" value="" placeholder="XXX.XXX.XXX.XXX" />
         </div>
         <div class="form-row online-props">
           <label>Broker Port:</label>
@@ -98,7 +99,7 @@
         </div>
         <div class="form-row online-props">
           <label>Device Topic ID:</label>
-          <input type="text" name="name" value="garage" />
+          <input type="text" name="name" value="door" />
           <div class="row-note">Name uniquely identifying the device in MQTT topics e.g. /garadget/TOPIC_ID/open</div>
         </div>
         <div class="form-row">
@@ -151,7 +152,7 @@
     <div class="gradient-footer"></div>
     <div class="liner-footer">
       <div class="footer-content width-limit">
-        <button class="button-action button-passive" onclick="f_formSubmit()">Save &amp; Connect</button>
+        <button class="button-passive" id="btn-submit" onclick="f_formSubmit()">Save &amp; Connect</button>
       </div>
     </div>
   </div>

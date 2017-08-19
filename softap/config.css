@@ -51,8 +51,14 @@ h1 {
 .main {
   padding: 100px 0;
 }
-.messages div {
+.messages ul {
   padding: 10px 15px;
+  margin: 0;
+}
+.messages li {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
 }
 .error-box {
   background-color: #ffe0e0;
@@ -150,16 +156,12 @@ h2 {
   margin: auto 0 auto auto;
   top: 0; left: 0; bottom: 0; right: 0;
 }
-.action-button {
-  z-index: 9;
-  cursor: pointer;
-}
 .row-note {
   font-size: 10px;
   color: silver;
   margin-top: 2px;
 }
-.button-action {
+button {
   min-width: 150px;
   color: white;
   border-left: 0;
@@ -173,7 +175,7 @@ h2 {
   background-color: #f46809;
   border-bottom: 2px solid #b24c07;
 }
-.button-action:hover {
+button:hover {
   background-color: #b24c07;
 }
 

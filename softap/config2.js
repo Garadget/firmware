@@ -1,13 +1,101 @@
-var s_baseUrl = 'http://192.168.0.1/';
-var o_rsa = new RSAKey();
+var s_baseUrl = 'http://192.168.0.1/',
+  a_networks = [];
+var o_rsa = new RSAKey(),
+  o_val = new c_validator();
+
+function f_boxSwitch(b_display, s_box, s_input) {
+  var e_style = f_getById(s_box).style;
+  var s_display = b_display ? '' : 'none';
+  if (e_style.display == s_display)
+    return;
+  e_style.display = s_display;
+  if (!b_display || !s_input)
+    return;
+  var e_input = f_getById(s_input);
+  e_input.value = '';
+  e_input.focus();
+}
+function f_boxManual(b_display) {
+  f_boxSwitch(b_display, 'box-ssid', 'ssid-value');
+}
+function f_boxPass(b_display) {
+  f_boxSwitch(b_display, 'box-pass', 'ap-pass');
+}
+function f_apChange(n_network) {
+  o_val.f_checkValid('pass,ssid');
+}
+
+function f_mqttChange() {
+  o_val.f_checkValid('mqip,mqpt,name');
+}
+
+function f_loadConfig(f_done) {
+  var b_success = false;
+
+  f_getRequest('config', {
+    success: function(a_response) {
+
+      f_inputValue('id', a_response.id);
+      f_inputValue('sys', a_response.sys);
+      f_inputValue('ver', a_response.ver);
+      f_inputValue('mqtt', a_response.mqtt);
+      f_inputValue('mqip', a_response.mqip);
+
+      f_populateSelect('mqto', ['1 second', 1e3, '2 seconds', 2e3, '3 seconds', 3e3, '5 seconds', 5e3, '10 seconds', 1e4, '30 seconds', 3e4, '1 minute', 6e4, '5 minutes', 3e5], 5e3, a_response.mqto);
+      f_populateSelect('rdt', ['twice per second', 5e2, 'every second', 1e3, 'every 2 seconds', 2e3, 'every 3 seconds', 3e3, 'every 5 seconds', 5e3, 'every 10 seconds', 1e4, 'twice per minute', 3e4, 'every minute', 6e4], 1e3, a_response.rdt);
+      f_populateSelect('srr', [1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 3, a_response.srr);
+
+      var a_options = ['3%', 3];
+      for (n_value = 5; n_value <= 80; n_value += 5) {
+        a_options[a_options.length] = n_value + '%';
+        a_options[a_options.length] = n_value;
+      }
+      f_populateSelect('srt', a_options, 15, a_response.srt);
+
+      a_options = [];
+      for (n_value = 5; n_value <= 30; n_value++) {
+        a_options[a_options.length] = n_value + ' seconds';
+        a_options[a_options.length] = n_value * 1000;
+      }
+      f_populateSelect('mtt', a_options, 1e4, a_response.mtt);
+      f_populateSelect('rlt', ['0.2 second', 200, '0.3 second', 300, '0.4 second', 400, '0.5 second', 500, '0.7 second', 700, '1 second', 1e3], a_response.rlt);
+
+      a_options = [];
+      for (n_value = 300; n_value <= 1e3; n_value += 100) {
+        a_options[a_options.length] = (n_value / 1e3) + ' second';
+        a_options[a_options.length] = n_value;
+      }
+      for (n_value = 2; n_value <= 5; n_value += 1) {
+        a_options[a_options.length] = n_value + ' seconds';
+        a_options[a_options.length] = n_value * 1000;
+      }
+      f_populateSelect('rlp', a_options, [], a_response.rlp);
+
+      // scan for APs
+      window.s_ssid = a_response.ssid || '';
+      f_inputValue('ssid-value', s_ssid);
+      b_success = true;
+    },
+    error: function () {
+      f_message('Error Requesting Configuration', true);
+    },
+    regardless: function() {
+      f_done(b_success);
+    }
+  });
+}
+
 
 function f_apScan() {
-  var s_html = '', e_apList = f_getById('aplist');
-  var b_ssidFound = false;
-  var b_showPassword = true;
+  var e_apList = f_getById('aplist');
+  e_apList.innerHTML = '<li>Loading...</li>';
+
   f_boxPass(false);
   f_boxManual(false);
-  e_apList.innerHTML = '<li>Loading...</li>';
+
+  var s_html = '',
+    b_ssidFound = false,
+    b_showPassword = true;
 
   f_getRequest('scan-ap', {
     success: function(a_response) {
@@ -37,7 +125,7 @@ function f_apScan() {
             b_showPassword = false;
         }
         s_html += '<li><input type="radio" name="ap" value="' + n_network
-          + '"' + (window.s_ssid == a_network.ssid ? 'checked' : '') + ' onclick="f_apChange(this.value)" /><div>'
+          + '"' + (window.s_ssid == a_network.ssid ? 'checked' : '') + ' /><div>'
           + a_network.ssid + '<span>' + (a_securityTypes[a_network.sec]
           ? a_securityTypes[a_network.sec] + ', ' : '') + f_signalStrength(a_network.rssi)
           + '</span></div></li>';
@@ -52,86 +140,69 @@ function f_apScan() {
       s_html += '<li><input type="radio" name="ap" value="-1"' + (b_ssidFound ? '' : 'checked')
         + ' onclick="f_apChange(this.value)" /><div>Enter Manually<span>Use For Hidden or Currently Unavailable Networks</span></div></li>';
       e_apList.innerHTML = s_html;
-      f_boxPass(b_showPassword);
-      f_boxManual(!b_ssidFound);
-      f_inputValue('ssid-value', window.s_ssid);
+      o_val.f_checkValid('pass,ssid');
+    }
+  });
+}
+
+function f_loadKey() {
+  o_val.f_setValid('pkey', false);
+  f_getRequest('public-key', {
+    success: function(a_response) {
+      var s_publicKey = a_response.b;
+      o_rsa.setPublic(s_publicKey.substring(58, 58 + 256), s_publicKey.substring(318, 318 + 6));
+      o_val.f_setValid('pkey', true);
+    },
+    error: function () {
+      f_message('Error Requesting Public Key', true);
     }
   });
 }
 
 window.onload = function() {
 
+  f_validate('ssid-value', function(o_event) {
+    o_val.f_checkValid('ssid');
+  });
+
+  f_validate('pass', function(o_event) {
+    o_val.f_checkValid('pass');
+  });
+
   f_validate('mqip', function(o_event) {
-    var a_bytes = this.value.split('.');
-    for (var n_byte = 0; n_byte < 4; n_byte++) {
-      if (!isNaN(a_bytes[n_byte])) {
-        a_bytes[n_byte] = '';
-        break;
-      }
-      else
-        a_bytes[n_byte] = Math.abs(parseInt(a_bytes[n_byte]));
+    var a_bytes = o_event.target.value.replace(/[^\d\.]+/, '').replace('..','.').replace(/^\./, '').split('.');
+    for (var n_byte = 0; n_byte < Math.min(4, a_bytes.length); n_byte++) {
+      if (a_bytes[n_byte] > 0xFF)
+        a_bytes[n_byte] = Math.floor(a_bytes[n_byte] / 10);
     }
-    this.value = a_bytes.join('.');
-    return true;
+    o_event.target.value = a_bytes.join('.');
+    o_val.f_checkValid('mqip');
   });
 
-  f_getRequest('config', {
-    success: function(a_response) {
-
-      f_inputValue('id', a_response.id);
-      f_inputValue('sys', a_response.sys);
-      f_inputValue('ver', a_response.ver);
-      f_inputValue('mqip', a_response.mqip);
-
-      f_populateSelect('mqto', ['1 second', 1e3, '2 seconds', 2e3, '3 seconds', 3e3, '5 seconds', 5e3, '10 seconds', 1e4, '30 seconds', 3e4, '1 minute', 6e4, '5 minutes', 3e5], 5e3, a_response.mqto);
-      f_populateSelect('rdt', ['twice per second', 5e2, 'every second', 1e3, 'every 2 seconds', 2e3, 'every 3 seconds', 3e3, 'every 5 seconds', 5e3, 'every 10 seconds', 1e4, 'twice per minute', 3e4, 'every minute', 6e4], 1e3, a_response.rdt);
-      f_populateSelect('srr', [1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 3, a_response.srr);
-
-      var a_options = ['3%', 3];
-      for (n_value = 5; n_value <= 80; n_value += 5) {
-        a_options[a_options.length] = n_value + '%';
-        a_options[a_options.length] = n_value;
-      }
-      f_populateSelect('srt', a_options, 15, a_response.srt);
-
-      a_options = [];
-      for (n_value = 5; n_value <= 30; n_value++) {
-        a_options[a_options.length] = n_value + ' seconds';
-        a_options[a_options.length] = n_value * 1000;
-      }
-      f_populateSelect('mtt', a_options, 1e4, a_response.mtt);
-
-      f_populateSelect('rlt', ['0.2 second', 200, '0.3 second', 300, '0.4 second', 400, '0.5 second', 500, '0.7 second', 700, '1 second', 1e3], a_response.rlt);
-
-      a_options = [];
-      for (n_value = 300; n_value <= 1e3; n_value += 100) {
-        a_options[a_options.length] = (n_value / 1e3) + ' second';
-        a_options[a_options.length] = n_value;
-      }
-      for (n_value = 2; n_value <= 5; n_value += 1) {
-        a_options[a_options.length] = n_value + ' seconds';
-        a_options[a_options.length] = n_value * 1000;
-      }
-      f_populateSelect('rlp', a_options, [], a_response.rlp);
-
-      // scan for APs
-      window.s_ssid = a_response.ssid;
-      f_apScan();
-    },
-    error: function () {
-      f_message('Error Requesting Configuration', true);
-    },
+  f_validate('mqpt', function(o_event) {
+    var n_value = o_event.target.value;
+    n_value = n_value.replace(/\D+/, '');
+    if (n_value > 0xFFFF)
+      n_value = Math.floor(n_value / 10);
+    o_event.target.value = n_value;
+    o_val.f_checkValid('mqpt');
   });
 
-  window.s_publicKey = '';
-  f_getRequest('public-key', {
-    success: function(a_response) {
-      var s_publicKey = a_response.b;
-      o_rsa.setPublic(s_publicKey.substring(58, 58 + 256), s_publicKey.substring(318, 318 + 6));
-    },
-    error: function () {
-      f_message('Error Requesting Public Key', true);
-    }
+  f_validate('name', function(o_event) {
+    o_event.target.value = o_event.target.value.replace(/[^\w\d\_]+/, '').substring(0 ,30);
+    o_val.f_checkValid('name');
   });
 
+  f_loadConfig(function(b_success) {
+    f_mqttChange();
+    f_loadKey();
+    f_apScan();
+  });
+}
+
+function f_formSubmit() {
+  if (!o_val.f_isValid()) {
+    f_message(o_val.f_getErrors().join('</li><li>'), true);
+    return false;
+  }
 }
