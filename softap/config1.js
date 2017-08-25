@@ -17,7 +17,7 @@ function f_postRequest(s_url, a_postData, a_handlers) {
     };
     window.n_busy = (window.n_busy || 0) + 1;
     o_request.send(JSON.stringify(a_postData));
-};
+}
 
 function f_getRequest(s_url, a_handlers) {
   // debug
@@ -67,7 +67,7 @@ function f_getRequest(s_url, a_handlers) {
   };
   window.n_busy = (window.n_busy || 0) + 1;
   o_request.send();
-};
+}
 
 /*
 
@@ -152,7 +152,7 @@ function f_inputValue(s_name, s_value) {
   // radio buttons
   else if (e_input.length) {
     var n_selectedIndex = -1;
-    for (var n_option = 0; n_option < e_input.length; n_option++) {
+    for (n_option = 0; n_option < e_input.length; n_option++) {
       if (arguments.length > 1 && e_input[n_option].value == s_value)
         n_selectedIndex = n_option;
       if (e_input[n_option].checked)
@@ -224,7 +224,7 @@ function f_message(s_message, b_error) {
   }
   e_box.innerHTML = '<li>' + s_message + '</li>';
   e_box.style.display = 'block';
-  setTimeout(function() { f_message('', b_error)}, 5000);
+  setTimeout(function() { f_message('', b_error); }, 5000);
 }
 
 function f_validate(s_name, f_callback) {
@@ -253,16 +253,16 @@ var c_validator = function() {
       if (!this.a_flags[s_flag])
         return false;
     return true;
-  }
+  };
 
   this.f_setSubmit = function() {
     f_getById('btn-submit').className = this.f_isValid() ? '' : 'button-passive';
-  }
+  };
 
   this.f_setValid = function(s_prop, s_value) {
     this.a_flags[s_prop] = s_value;
     this.f_setSubmit();
-  }
+  };
 
   this.f_checkValid = function(s_params) {
     this.s_focus = '';
@@ -272,12 +272,12 @@ var c_validator = function() {
       this.a_flags[s_param] = this['f_val' + s_param]();
     }
     this.f_setSubmit();
-  }
+  };
 
   this.f_focus = function(s_id) {
     if (!this.s_focus)
       this.s_focus = s_id;
-  }
+  };
 
   this.a_tests = {};
 
@@ -286,7 +286,6 @@ var c_validator = function() {
     this.a_tests[0] = [];
     var n_value = f_inputValue('ap');
     if (n_value != -1) {
-      f_inputValue('ssid-value', a_networks[n_value].ssid);
       f_boxManual(false);
       return true;
     }
@@ -304,11 +303,8 @@ var c_validator = function() {
   this.f_valpass = function() {
     this.a_tests[1] = [];
     var n_value = f_inputValue('ap');
-    if (n_value < 0) {
-      f_boxPass(true);
-      return true;
-    }
-    if (!a_networks[n_value].sec) {
+    if ((n_value < 0 && !parseInt(f_inputValue('ap-sec'))) ||
+      (n_value >=0 && !a_networks[n_value].sec)) {
       f_boxPass(false);
       return true;
     }
@@ -317,9 +313,10 @@ var c_validator = function() {
     var s_value = f_inputValue('pass');
     if (s_value.length > 7)
       return true;
-    this.a_tests[1].push(s_value.length
-      ? 'WiFi Password is Too Short'
-      : 'Password is Required for Secured Network');
+    this.a_tests[1].push(s_value.length ?
+      'WiFi Password is Too Short' :
+      'Password is Required for Secured Network'
+    );
     this.f_focus('ap-pass');
     return false;
   };
@@ -328,7 +325,7 @@ var c_validator = function() {
   this.f_valmqip = function() {
     this.a_tests[2] = [];
     if (!(f_inputValue('mqtt') & 2)) {
-      f_boxSwitch(false, 'box-mqtt')
+      f_boxSwitch(false, 'box-mqtt');
       return true;
     }
 
@@ -393,11 +390,11 @@ var c_validator = function() {
     var a_errors = [];
     for (var s_test in this.a_tests)
       if (this.a_tests[s_test].length)
-        for (s_error in this.a_tests[s_test])
+        for (var s_error in this.a_tests[s_test])
           a_errors.push(this.a_tests[s_test][s_error]);
     if (this.s_focus)
       f_getById(this.s_focus).focus();
     return a_errors;
-  }
+  };
 
 };

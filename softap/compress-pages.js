@@ -46,7 +46,7 @@ o_fileSystem.readFile(s_result, 'utf8', function(s_error, s_result) {
 	a_result = s_result.split("\n");
 
 	a_htmlFiles.forEach(function(a_file) {
-		console.log('processing ' + a_file.source);
+		console.log('processing ' + a_file.source + '...');
 		o_fileSystem.readFile(a_file.source, 'utf8', function(s_error, s_data) {
 			if (s_error)
 				return console.log(s_error);
@@ -57,9 +57,12 @@ o_fileSystem.readFile(s_result, 'utf8', function(s_error, s_result) {
 				collapseWhitespace: true,
 				quoteCharacter: "'",
 				removeAttributeQuotes: true,
+				removeEmptyAttributes: true,
+				removeScriptTypeAttributes : true,
 				removeComments: true
 			});
 			s_compressed = s_compressed.replace(/\"/g, '\\"');
+			console.log(a_file.source + ' - Compressed size: ' + s_compressed.length);
 			//console.log('size: ' + s_compressed.length());
 			a_result = f_injectResult(s_compressed, a_file.regexp, a_result);
 			n_callbacks--;
@@ -69,13 +72,14 @@ o_fileSystem.readFile(s_result, 'utf8', function(s_error, s_result) {
 	});
 
 	a_cssFiles.forEach(function(a_file) {
-		console.log('processing ' + a_file.source);
+		console.log('processing ' + a_file.source + '...');
 		o_fileSystem.readFile(a_file.source, 'utf8', function(s_error, s_data) {
 			if (s_error)
 				return console.log(s_error);
 
 			var a_compressed = new o_cleanCSS({}).minify(s_data);
-			a_result = f_injectResult(a_compressed.styles, a_file.regexp, a_result)
+			console.log(a_file.source + ' - Compressed size: ' + a_compressed.styles.length);
+			a_result = f_injectResult(a_compressed.styles, a_file.regexp, a_result);
 			n_callbacks--;
 			if (!n_callbacks)
 				f_saveResult(a_result);
@@ -83,14 +87,15 @@ o_fileSystem.readFile(s_result, 'utf8', function(s_error, s_result) {
 	});
 
 	a_jsFiles.forEach(function(a_file) {
-		console.log('processing ' + a_file.source);
+		console.log('processing ' + a_file.source  + '...');
 		o_fileSystem.readFile(a_file.source, 'utf8', function(s_error, s_data) {
 			if (s_error)
 				return console.log(s_error);
 
 			var a_compressed = o_uglifyJS.minify(s_data);
 			var s_compressed = a_compressed.code.replace(/\\/g, '\\\\').replace(/\"/g, '\\"');
-			a_result = f_injectResult(s_compressed, a_file.regexp, a_result)
+			console.log(a_file.source + ' - Compressed size: ' + s_compressed.length);
+			a_result = f_injectResult(s_compressed, a_file.regexp, a_result);
 			n_callbacks--;
 			if (!n_callbacks)
 				f_saveResult(a_result);

@@ -8,8 +8,8 @@
 </head>
 <body>
   <div class="header">
-    <div class="liner-header">
-      <div class="header-content width-limit">
+    <div class="lh">
+      <div class="header-content wl">
         <object type="image/svg+xml" data="logo.svg"></object>
         <h1 id="title">Setup</h1>
       </div>
@@ -18,140 +18,139 @@
       <ul class="error-box" id="error-box" style="display:none;"></ul>
       <ul class="message-box" id="message-box" style="display:none;"></ul>
     </div>
-    <div class="gradient-header"></div>
+    <div class="gh"></div>
   </div>
-  <form class="main width-limit" method="post">
-    <div class="settings-group">
+  <form class="main wl">
+    <div class="sg">
       <h2>Device</h2>
-      <div class="form-row">
+      <div class="fr">
         <label>ID:</label>
-        <div class="input-action">
-          <input type="text" name="id" value="" disabled="disabled" />
+        <div class="ia">
+          <input type="text" name="id" value="" disabled />
           <object type="image/svg+xml" data="copy.svg"></object>
-          <div title="Copy Device ID" class="action-button" onclick="f_copyId()"></div>
+          <div title="Copy Device ID" class="ab" onclick="f_copyId()"></div>
         </div>
       </div>
-      <div class="form-row online-props">
+      <div class="fr">
         <label>System:</label>
-        <input type="text" name="sys" value="" disabled="disabled" />
+        <input type="text" name="sys" value="" disabled />
       </div>
-      <div class="form-row online-props">
+      <div class="fr">
         <label>Firmware:</label>
-        <input type="text" name="ver" value="" disabled="disabled" />
+        <input type="text" name="ver" value="" disabled />
       </div>
     </div>
 
-    <div class="settings-group">
+    <div class="sg">
       <h2>WiFi</h2>
-      <!--div class="form-row">
-        <label>MAC:</label>
-        <div class="input-action" title="Copy Device MAC Address">
-          <input type="text" name="mac" id="deviceid" value="2d003b001247343432313031" disabled="disabled" />
-          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="-316 388 40 40" xml:space="preserve">
-            <path id="Shape" d="M-289,399h-4.2c-0.4-1.2-1.5-2-2.8-2s-2.4,0.8-2.8,2h-4.2c-1.1,0-2,0.9-2,2v16c0,1.1,0.9,2,2,2h14
-            	c1.1,0,2-0.9,2-2v-16C-287,399.9-287.9,399-289,399L-289,399z M-296,399c0.6,0,1,0.4,1,1s-0.4,1-1,1s-1-0.4-1-1S-296.6,399-296,399
-            	L-296,399z M-289,417h-14v-16h2v3h10v-3h2V417L-289,417z"/>
-          </svg>
-        </div>
-      </div-->
-      <div class="form-row">
+      <div class="fr">
         <label>SSID:</label>
-        <div class="input-action">
-          <ul class="radio-group" id="aplist" onclick="f_apChange()">
+        <div class="ia">
+          <ul class="rg" id="aplist">
             <li>Loading...</li>
           </ul>
           <object type="image/svg+xml" data="refresh.svg"></object>
-          <div title="Rescan WiFi" class="action-button" onclick="f_apScan()"></div>
+          <div title="Rescan WiFi" class="ab" onclick="f_apScan()"></div>
         </div>
       </div>
-      <div class="form-row" id="box-ssid" style="display:none;">
-        <label>Hidden/Unavailable SSID:</label>
-        <input type="text" name="ap-manual" id="ssid-value" value="" />
+      <div id="box-ssid" style="display:none;">
+        <div class="fr">
+          <label>Hidden/Unavailable SSID:</label>
+          <input type="text" name="ap-manual" id="ssid-value" value="" />
+        </div>
+        <div class="fr">
+          <label>Security:</label>
+          <select name="ap-sec" id="sec-value" onchange="f_apChange()"></select>
+        </div>
+        <div class="fr">
+          <label>Channel:</label>
+          <select name="ap-chan" id="chan-value"></select>
+        </div>
       </div>
-      <div class="form-row online-props" id="box-pass" style="display:none;">
+      <div class="fr" id="box-pass" style="display:none;">
         <label>Password:</label>
-        <div class="input-action">
+        <div class="ia">
           <input type="password" name="pass" id="ap-pass" value="" />
           <object type="image/svg+xml" data="show.svg"></object>
-          <div title="Toggle Password Visibility" class="action-button" onclick="f_togglePass()"></div>
+          <div title="Toggle Visibility" class="ab" onclick="f_togglePass()"></div>
         </div>
       </div>
     </div>
 
-    <div class="settings-group">
+    <div class="sg">
       <h2>MQTT</h2>
-      <div class="form-row">
+      <div class="fr">
         <label>Mode:</label>
-        <ul class="radio-group" onclick="f_mqttChange()">
+        <ul class="rg" onclick="f_mqttChange()">
           <li><input type="radio" name="mqtt" value="3" /> <div>MQTT + Cloud</div></li>
           <li><input type="radio" name="mqtt" value="2" /> <div>Only MQTT</div></li>
           <li><input type="radio" name="mqtt" value="1" checked /> <div>Only Cloud</div></li>
         </ul>
       </div>
       <div id="box-mqtt" style="display:none;">
-        <div class="form-row">
+        <div class="fr">
           <label>Broker IP:</label>
           <input type="text" name="mqip" value="" placeholder="XXX.XXX.XXX.XXX" />
         </div>
-        <div class="form-row online-props">
+        <div class="fr">
           <label>Broker Port:</label>
           <input type="text" name="mqpt" value="1883" />
         </div>
-        <div class="form-row online-props">
+        <div class="fr">
           <label>Device Topic ID:</label>
           <input type="text" name="name" value="door" />
-          <div class="row-note">Name uniquely identifying the device in MQTT topics e.g. /garadget/TOPIC_ID/open</div>
+          <div class="rn">Name uniquely identifying the device in MQTT topics e.g. /garadget/TOPIC_ID/open</div>
         </div>
-        <div class="form-row">
+        <div class="fr">
           <label>Reconnect Timeout:</label>
           <select name="mqto"></select>
-          <div class="row-note">Period to check the connection with server and reconnect if necessary</div>
+          <div class="rn">Period to check the connection with server and reconnect if necessary</div>
         </div>
       </div>
     </div>
 
-    <div class="settings-group">
+    <div class="sg">
       <h2>Sensor</h2>
-      <div class="form-row">
+      <div class="fr">
         <label>Scan Period:</label>
         <select name="rdt"></select>
-        <div class="row-note">Time between sensor scans</div>
+        <div class="rn">Time between sensor scans</div>
       </div>
-      <div class="form-row">
+      <div class="fr">
         <label>Sensor Reads:</label>
         <select name="srr"></select>
-        <div class="row-note">Number of measurements in each period with results averaged</div>
+        <div class="rn">Number of measurements in each period with results averaged</div>
       </div>
-      <div class="form-row">
+      <div class="fr">
         <label>Sensor Threshold:</label>
         <select name="srt"></select>
-        <div class="row-note">Lowest reflection reading to trigger the sensor</div>
+        <div class="rn">Lowest reflection reading to trigger the sensor</div>
       </div>
     </div>
 
-    <div class="settings-group">
+    <div class="sg">
       <h2>Door</h2>
-      <div class="form-row">
+      <div class="fr">
         <label>Door Motion Time:</label>
         <select name="mtt"></select>
-        <div class="row-note">Time it takes for door to completely open or close</div>
+        <div class="rn">Time it takes for door to completely open or close</div>
       </div>
-      <div class="form-row">
+      <div class="fr">
         <label>Relay On Time:</label>
         <select name="rlt"></select>
-        <div class="row-note">Duration of simulated button push</div>
+        <div class="rn">Duration of simulated button push</div>
       </div>
-      <div class="form-row">
+      <div class="fr">
         <label>Relay Off Time:</label>
         <select name="rlp"></select>
-        <div class="row-note">Time between consecutive button pushes</div>
+        <div class="rn">Time between consecutive button pushes</div>
       </div>
     </div>
   </form>
   <div class="footer">
-    <div class="gradient-footer"></div>
+    <div class="gf"></div>
     <div class="liner-footer">
-      <div class="footer-content width-limit">
+      <div class="footer-content wl">
         <button class="button-passive" id="btn-submit" onclick="f_formSubmit()">Save &amp; Connect</button>
       </div>
     </div>

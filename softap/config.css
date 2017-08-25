@@ -8,7 +8,7 @@ body {
   font-family: Helvetica, sans-serif;
   font-size: 16px;
 }
-a,
+a,lh
 a:active,
 a:visited {
   text-decoration: none;
@@ -27,11 +27,11 @@ a:visited {
   bottom: 0;
   text-align: right;
 }
-.liner-header,
+.lh,
 .liner-footer {
   background-color: #006600;
 }
-.width-limit {
+.wl {
   max-width: 600px;
   margin: 0 auto;
   padding: 10px 15px;
@@ -52,7 +52,7 @@ h1 {
   padding: 100px 0;
 }
 .messages ul {
-  padding: 10px 15px;
+  padding: 10px 25px;
   margin: 0;
 }
 .messages li {
@@ -66,39 +66,39 @@ h1 {
 .message-box {
   background-color: #E0FFE0;
 }
-.gradient-header {
+.gh {
   height: 25px;
   border-top: 5px solid white;
   background: linear-gradient(white, transparent);
 }
-.gradient-footer {
+.gf {
   height: 25px;
   border-bottom: 5px solid white;
   background: linear-gradient(transparent, white);
 }
-.settings-group {
+.sg {
   margin: 10px 10px 20px 10px;
 }
-.radio-group {
+.rg {
   list-style: none;
   margin: 0 0;
   padding: 5px 15px;
   border: 1px solid silver;
 }
-.radio-group li {
+.rg li {
   margin: 5px 0 5px 0;
   padding: 0;
 }
-.radio-group * {
+.rg * {
   margin: 0;
   padding: 0;
   vertical-align: middle;
 }
-.radio-group div {
+.rg div {
   display: inline-block;
   margin-left: 7px;
 }
-.radio-group span {
+.rg span {
   display: block;
   font-size: 10px;
   color: grey;
@@ -113,7 +113,7 @@ h2 {
   margin: 0 15px 10px 15px;
   border-bottom: 4px solid silver;
 }
-.form-row {
+.fr {
   max-width: 300px;
   margin: 0 auto 10px auto;
   text-align: left;
@@ -127,14 +127,14 @@ h2 {
   text-align: right;
   flex-shrink: 0;
 }
-.form-row label {
+.fr label {
   display: block;
   margin: 0;
   color: gray;
 }
-.form-row input[type="text"],
-.form-row input[type="password"],
-.form-row select {
+.fr input[type="text"],
+.fr input[type="password"],
+.fr select {
   width: 100%;
   padding: 10px;
   -moz-box-sizing: border-box;
@@ -144,11 +144,11 @@ h2 {
   border: 1px solid silver;
   font-size: 16px;
 }
-.input-action {
+.ia {
   position: relative;
 }
-.input-action object,
-.action-button {
+.ia object,
+.ab {
   position: absolute;
   max-height: 40px;
   max-width: 40px;
@@ -156,7 +156,7 @@ h2 {
   margin: auto 0 auto auto;
   top: 0; left: 0; bottom: 0; right: 0;
 }
-.row-note {
+.rn {
   font-size: 10px;
   color: silver;
   margin-top: 2px;
