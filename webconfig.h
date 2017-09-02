@@ -14,11 +14,13 @@
 #include "softap_http.h"
 #include "door.h"
 #include "config.h"
+#include "command.h"
 
 struct c_page {
     const char* url;
     const char* mime_type;
     const char* data;
+    const bool force_type;
 };
 
 void f_pageHandler(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Writer* result, void* reserved);

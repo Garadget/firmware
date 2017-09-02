@@ -32,7 +32,7 @@ class c_config {
     uint16_t n_alertNightEnd;
     char s_timeZone[25];
     char s_deviceName[MAXNAMESIZE];
-    uint8_t n_mqttOnly;
+    uint8_t n_protocols;
     uint8_t n_mqttBrokerIp[4];
     uint16_t n_mqttBrokerPort;
     uint16_t n_mqttTimeout;

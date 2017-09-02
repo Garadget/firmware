@@ -21,12 +21,12 @@ function f_postRequest(s_url, a_postData, a_handlers) {
 
 function f_getRequest(s_url, a_handlers) {
   // debug
-  if (String(window.location).indexOf('192.168.0.1') == -1) {
+/*  if (String(window.location).indexOf('192.168.0.1') == -1) {
     window.n_busy = (window.n_busy || 0) + 1;
     window.setTimeout(function(){
       window.n_busy--;
       var a_tests = {
-        'config':  {
+        'get-config':  {
           sys:"0.6.2", id:"330038000451353530353431",ver:"1.13",mac:"00:00:00:00:00:00",
           ssid:"TP-LINK",rdt:1000,mtt:10000,rlt:300,rlp:1000,srr:3,srt:15,
           nme:"Garage",mqon:255,mqip:"255.255.255.255",mqpt:65535,mqto:65535,mqtt:2
@@ -47,7 +47,7 @@ function f_getRequest(s_url, a_handlers) {
         a_handlers.regardless();
     }, 1000);
     return;
-  }
+  }*/
 
   var o_request = new XMLHttpRequest();
   o_request.open('GET', s_baseUrl + s_url, true);
@@ -68,60 +68,6 @@ function f_getRequest(s_url, a_handlers) {
   window.n_busy = (window.n_busy || 0) + 1;
   o_request.send();
 }
-
-/*
-
-var configure = function(a) {
-    a.preventDefault();
-    var b = get_selected_network();
-    var c = document.getElementById('password').value;
-    if (!b) {
-        window.alert('Please select a network!');
-        return false;
-    }
-    var d = {
-        idx: 0,
-        ssid: b.ssid,
-        pwd: rsa.encrypt(c),
-        sec: b.sec,
-        ch: b.ch
-    };
-    connectButton.innerHTML = 'Sending credentials...';
-    disableButtons();
-    console.log('Sending credentials: ' + JSON.stringify(d));
-    postRequest(base_url + 'configure-ap', d, configure_callback);
-};
-
-var configure_callback = {
-    success: function(a) {
-        console.log('Credentials received.');
-        connectButton.innerHTML = 'Credentials received...';
-        postRequest(base_url + 'connect-ap', {
-            idx: 0
-        }, connect_callback);
-    },
-    error: function(a, b) {
-        console.log('Configure error: ' + a);
-        window.alert('The configuration command failed, check that you are still well connected to the device\\'
-            s WiFi hotspot and retry.
-            ');connectButton.innerHTML='
-            Retry ';enableButtons();}};var connect_callback={success:function(a){console.log('
-            Attempting to connect to the cloud.
-            ');connectButton.innerHTML='
-            Attempting to connect...';window.alert('
-            Your device should now start flashing green and attempt to connect to the cloud.This usually takes about 20 seconds, after which it will begin slowly blinking cyan.\\n\\ n\\ nIf this process fails because you entered the wrong password, the device will flash green indefinitely.In this
-            case, hold the setup button
-            for 6 seconds until the device starts blinking blue again.Then reconnect to the WiFi hotspot it generates and reload this page to
-            try again.
-            ');},error:function(a,b){console.log('
-            Connect error:
-                '+a);window.alert('
-                The connect command failed, check that you are still well connected to the device\\ 's WiFi hotspot and retry.');
-        connectButton.innerHTML = 'Retry';
-        enableButtons();
-    }
-};
-*/
 
 function f_getById(s_id) {
   var e_elem = document.getElementById(s_id);
@@ -241,12 +187,12 @@ var c_validator = function() {
     pass: false,
     mqip: false,
     mqpt: false,
-    name: false,
+    nme: false,
     pkey: false
   };
 
   this.f_isValid = function() {
-//    console.log(this.a_flags);
+    // console.log(this.a_flags);
     if (window.b_busy)
       return false;
     for (var s_flag in this.a_flags)
@@ -367,20 +313,20 @@ var c_validator = function() {
     return true;
   };
 
-  this.f_valname = function() {
+  this.f_valnme = function() {
     this.a_tests[4] = [];
     if (!(f_inputValue('mqtt') & 2))
       return true;
 
-    var s_value = f_inputValue('name');
+    var s_value = f_inputValue('nme');
     if (!s_value.length) {
       this.a_tests[4].push('MQTT Device Topic is Required');
-      this.f_focus('name');
+      this.f_focus('nme');
       return false;
     }
     if (!s_value.match(/^[\w\d\_]{1,31}$/)) {
       this.a_tests[4].push('Invalid Value of MQTT Device Topic');
-      this.f_focus('name');
+      this.f_focus('nme');
       return false;
     }
     return true;

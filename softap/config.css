@@ -36,7 +36,7 @@ a:visited {
   margin: 0 auto;
   padding: 10px 15px;
 }
-.header object {
+.header img {
   height: 50px;
   float: left;
 }
@@ -133,6 +133,7 @@ h2 {
   color: gray;
 }
 .fr input[type="text"],
+.fr input[type="number"],
 .fr input[type="password"],
 .fr select {
   width: 100%;
@@ -147,9 +148,10 @@ h2 {
 .ia {
   position: relative;
 }
-.ia object,
+.ia img,
 .ab {
   position: absolute;
+  cursor: pointer;
   max-height: 40px;
   max-width: 40px;
   overflow: auto;

@@ -35,20 +35,18 @@ function f_apChange(n_network) {
   o_val.f_checkValid('pass,ssid');
 }
 function f_mqttChange() {
-  o_val.f_checkValid('mqip,mqpt,name');
+  o_val.f_checkValid('mqip,mqpt,nme');
 }
 
 function f_loadConfig(f_done) {
   var b_success = false;
 
-  f_getRequest('config', {
+  f_getRequest('load-config', {
     success: function(a_response) {
 
-      f_inputValue('id', a_response.id);
-      f_inputValue('sys', a_response.sys);
-      f_inputValue('ver', a_response.ver);
-      f_inputValue('mqtt', a_response.mqtt);
-      f_inputValue('mqip', a_response.mqip);
+      var a_props = ['id','sys','ver','mqtt','mqip','mqpt','nme'];
+      for (var n_prop = 0; n_prop < a_props.length; n_prop++)
+        f_inputValue(a_props[n_prop], a_response[a_props[n_prop]]);
 
       f_populateSelect('mqto', ['1 second', 1e3, '2 seconds', 2e3, '3 seconds', 3e3, '5 seconds', 5e3, '10 seconds', 1e4, '30 seconds', 3e4, '1 minute', 6e4, '5 minutes', 3e5], 5e3, a_response.mqto);
       f_populateSelect('rdt', ['twice per second', 5e2, 'every second', 1e3, 'every 2 seconds', 2e3, 'every 3 seconds', 3e3, 'every 5 seconds', 5e3, 'every 10 seconds', 1e4, 'twice per minute', 3e4, 'every minute', 6e4], 1e3, a_response.rdt);
@@ -172,11 +170,11 @@ function f_loadKey() {
 
 window.onload = function() {
 
-  f_validate('ssid-value', function(o_event) {
+  f_validate('ssid-value', function() {
     o_val.f_checkValid('ssid');
   });
 
-  f_validate('pass', function(o_event) {
+  f_validate('pass', function() {
     o_val.f_checkValid('pass');
   });
 
@@ -199,9 +197,9 @@ window.onload = function() {
     o_val.f_checkValid('mqpt');
   });
 
-  f_validate('name', function(o_event) {
+  f_validate('nme', function(o_event) {
     o_event.target.value = o_event.target.value.replace(/[^\w\d\_]+/, '').substring(0 ,30);
-    o_val.f_checkValid('name');
+    o_val.f_checkValid('nme');
   });
 
   f_loadConfig(function(b_success) {
@@ -239,19 +237,48 @@ function f_formSubmit() {
   f_message('Saving credentials...');
   f_postRequest('configure-ap', a_wifi, {
     success: function(a_response) {
-      console.log(a_response);
-      // >> configure garadget
-      // >> connect to network?
+      if (a_response.r !== 0)
+        return f_configError(a_response.r);
+      var a_settings = {},
+        a_props = {nme:0,rdt:1,mtt:1,rlt:1,rlp:1,srr:1,srt:1,mqtt:1,mqip:0,mqpt:1,mqto:1};
+      for (var s_prop in a_props) {
+        var s_val = f_inputValue(s_prop);
+        if (a_props[s_prop])
+          s_val = parseInt(s_val);
+        a_settings[s_prop] = s_val;
+      }
+
+      a_settings.mqip = a_settings.mqip.split('.').reduce(function(n_int, s_int) {
+        return (n_int << 8) + parseInt(s_int, 10);
+      }, 0) >>> 0;
+
+      // console.log(a_settings);
+      f_message('Saving settings...');
+      f_postRequest('save-config', a_settings, {
+        success: function(a_response) {
+          if (a_response.r !== 0)
+            return f_configError(a_response.r);
+          f_message('Connecting WiFi...');
+          f_postRequest('connect-ap', {idx: 0}, {
+            success: function(a_response) {
+              f_message('All Set!');
+            }
+          });
+        },
+        error: f_configError
+      });
     },
-    error: function(s_status, s_text) {
-      console.log(s_status + ': ' + s_text);
-      f_message();
-      f_message('The configuration command failed<br />Check that you are still well connected to the device\'s WiFi hotspot and retry.', true);
-      f_submitValid(true);
-    },
+    error: f_configError,
     regardless: function() {
 
     }
   });
   return false;
+}
+
+function f_configError(s_status, s_text) {
+  console.log(s_status + ': ' + s_text);
+  f_message();
+  f_message('Error saving the Settings.<br />Check that you are still well connected to the device\'s WiFi hotspot and retry.', true);
+  f_submitValid(true);
 }
