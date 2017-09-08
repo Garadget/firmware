@@ -15,7 +15,8 @@
 #define JSON_DEBUG(x) Serial.printlnf x
 
 class Command {
-  virtual int execute(Reader& reader, Writer& writer);
+  public:
+    virtual int execute(Reader& reader, Writer& writer);
 };
 
 class JSONCommand : public Command {
@@ -43,29 +44,12 @@ class JSONRequestCommand : public JSONCommand {
 };
 
 class SetConfigCommand : public JSONRequestCommand {
-
-  typedef struct {
-    char s_deviceName[MAXNAMESIZE];
-    uint16_t n_readTime;
-    uint16_t n_motionTime;
-    uint16_t n_relayTime;
-    uint16_t n_relayPause;
-    uint8_t n_sensorReads;
-    uint8_t n_sensorThreshold;
-    uint32_t n_mqttBrokerIp;
-    uint16_t n_mqttBrokerPort;
-    uint16_t n_mqttTimeout;
-    uint8_t n_protocols;
-  } doorConfig;
-
-  doorConfig a_config;
-  static const char* KEY[11];
-  static const int OFFSET[];
-  static const jsmntype_t TYPE[];
-
-  virtual bool parsed_value(unsigned key, jsmntok_t* t, char* str);
-  int parse_request(Reader& reader);
-  int process();
+    static const char* KEY[11];
+    static const jsmntype_t TYPE[];
+    static c_config& o_config;
+    bool parsed_value(unsigned key, jsmntok_t* t, char* str);
+  public:
+    int execute(Reader& o_reader, Writer& o_writer);
 };
 
 #endif

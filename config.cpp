@@ -65,15 +65,6 @@ void c_config::f_save() {
 int8_t c_config::f_reset() {
   a_config.n_versionMajor = VERSION_MAJOR;
   a_config.n_versionMinor = VERSION_MINOR;
-
-  a_config.n_protocols = 0;
-  a_config.n_mqttBrokerIp[0] = 0;
-  a_config.n_mqttBrokerIp[1] = 0;
-  a_config.n_mqttBrokerIp[2] = 0;
-  a_config.n_mqttBrokerIp[3] = 0;
-  a_config.n_mqttBrokerPort = MQTT_PORT;
-  a_config.n_mqttTimeout = MQTT_TIMEOUT;
-
   return f_parse(DEFULT_CONFIG, FALSE) + 5;
 }
 
@@ -280,6 +271,59 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
     return 1;
   }
 
+  if (s_param.equals("mqtt")) {
+    n_value = s_value.toInt();
+    if (n_value > 0b011)
+      return -1;
+    if (n_value == a_config.n_protocols)
+      return 0;
+    a_config.n_protocols = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("mqip")) {
+    uint8_t n_start = 0, n_end, n_return = 0;
+    for (uint8_t n_octet = 0; n_octet < 4; n_octet++) {
+      n_end = s_value.indexOf('.', n_start);
+      n_value = s_value.substring(n_start, n_end).toInt();
+      if (!s_value.length() || n_value > 0xFF)
+        return -1;
+      if (n_value != a_config.n_mqttBrokerIp[n_octet])
+        n_return = 1;
+      a_config.n_mqttBrokerIp[n_octet] = n_value;
+      n_start = n_end + 1;
+    }
+    #ifdef APPDEBUG
+      Serial.printlnf(
+        "Updated IP address, new value: %u.%u.%u.%u\n",
+        a_config.n_mqttBrokerIp[0],
+        a_config.n_mqttBrokerIp[1],
+        a_config.n_mqttBrokerIp[2],
+        a_config.n_mqttBrokerIp[3]
+    );
+    #endif
+    return n_return;
+  }
+
+  if (s_param.equals("mqpt")) {
+    n_value = s_value.toInt();
+    if (!n_value || n_value > 0xFFFF)
+      return -1;
+    if (n_value == a_config.n_mqttBrokerPort)
+      return 0;
+    a_config.n_mqttBrokerPort = n_value;
+    return 1;
+  }
+
+  if (s_param.equals("mqto")) {
+    n_value = s_value.toInt();
+    if (n_value > 0xFFFF)
+      return -1;
+    if (n_value == a_config.n_mqttTimeout)
+      return 0;
+    a_config.n_mqttTimeout = n_value;
+    return 1;
+  }
   return -1;
 }
 
@@ -315,6 +359,7 @@ void c_config::f_getJsonConfig(char* s_buffer) {
     a_config.n_mqttTimeout
   );
 }
+
 /*
 void c_config::f_setJsonConfig(char* s_buffer) {
 

@@ -248,10 +248,6 @@ function f_formSubmit() {
         a_settings[s_prop] = s_val;
       }
 
-      a_settings.mqip = a_settings.mqip.split('.').reduce(function(n_int, s_int) {
-        return (n_int << 8) + parseInt(s_int, 10);
-      }, 0) >>> 0;
-
       // console.log(a_settings);
       f_message('Saving settings...');
       f_postRequest('save-config', a_settings, {

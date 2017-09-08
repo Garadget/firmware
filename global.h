@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 13
+#define VERSION_MINOR 14
 #define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
@@ -40,9 +40,6 @@
 #define PIN_RELAY D3
 #define PIN_PHOTO A0
 
-#define MQTT_PORT 1883
-#define MQTT_TIMEOUT 5000
-
 // garadget own address - first
 #define PORT_ADDRESS 0x10
 // I2C size of the address range starting from own
@@ -50,7 +47,7 @@
 // I2C message buffer size
 #define PORT_BUFFER 0x20
 
-#define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=15|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage"
+#define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=15|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage|mqtt=1|mqip=0.0.0.0|mqpt=1883|mqto=5000"
 
 // offsets the base value of sensor reading to improve the contrast in the bright environments
 #define SENSOR_BIAS 100

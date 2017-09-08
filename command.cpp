@@ -174,54 +174,21 @@ int JSONRequestCommand::parse_json_request(Reader& reader, const char* const key
   return result;
 }
 
-bool SetConfigCommand::parsed_value(unsigned key, jsmntok_t* t, char* str) {
-  void* data = ((uint8_t*)&a_config) + OFFSET[key];
-  JSON_DEBUG(("Key: %u, Offset: %u", key, OFFSET[key]));
-
-  if (!data) {
-    JSON_DEBUG( ( "no data\n" ) );
-    return false;
-  }
-  if (t->type == JSMN_STRING) {
-    strncpy((char*)data, str, MAXNAMESIZE - 1);
-    JSON_DEBUG( ( "copied value %s\n", (char*)str ) );
-  }
-  else {
-    int32_t value = atoi(str);
-    *((int32_t*)data) = value;
-    JSON_DEBUG( ( "copied number %s (%d)\n", (char*)str, (int)value ) );
-  }
-  return true;
+int SetConfigCommand::execute(Reader& o_reader, Writer& o_writer) {
+  //o_config = c_config::f_getInstance();
+  int n_result = parse_json_request(o_reader, KEY, TYPE, arraySize(KEY));
+  produce_response(o_writer, n_result);
+  return n_result;
 }
 
-int SetConfigCommand::parse_request(Reader& reader) {
-  memset(&a_config, 0, sizeof(doorConfig));
-  return parse_json_request(reader, KEY, TYPE, arraySize(KEY));
+bool SetConfigCommand::parsed_value(unsigned n_key, jsmntok_t* a_type, char* s_value) {
+  JSON_DEBUG(("JSON Key: %s, Value: %s", KEY[n_key], (char*)s_value));
+  int8_t n_result = o_config.f_setValue(String(KEY[n_key]), String(s_value));
+  return (n_result != -1);
 }
 
-int SetConfigCommand::process() {
-  // @todo: continue from here
-  JSON_DEBUG(("all parsed, name: %s", (char*)a_config.s_deviceName));
-  JSON_DEBUG(("timeout: %u", (unsigned)a_config.n_mqttTimeout));
-  return 0;
-  //return save_credentials();
-}
-
+c_config& SetConfigCommand::o_config = c_config::f_getInstance();
 const char* SetConfigCommand::KEY[11] = {"nme","rdt","mtt","rlt","rlp","srr","srt","mqtt","mqip","mqpt","mqto"};
-const int SetConfigCommand::OFFSET[] = {
-  offsetof(doorConfig, s_deviceName),
-  offsetof(doorConfig, n_readTime),
-  offsetof(doorConfig, n_motionTime),
-  offsetof(doorConfig, n_relayTime),
-  offsetof(doorConfig, n_relayPause),
-  offsetof(doorConfig, n_sensorReads),
-  offsetof(doorConfig, n_sensorThreshold),
-  offsetof(doorConfig, n_protocols),
-  offsetof(doorConfig, n_mqttBrokerIp),
-  offsetof(doorConfig, n_mqttBrokerPort),
-  offsetof(doorConfig, n_mqttTimeout)
-};
-
 const jsmntype_t SetConfigCommand::TYPE[] = {
   JSMN_STRING,
   JSMN_PRIMITIVE,
@@ -231,7 +198,7 @@ const jsmntype_t SetConfigCommand::TYPE[] = {
   JSMN_PRIMITIVE,
   JSMN_PRIMITIVE,
   JSMN_PRIMITIVE,
-  JSMN_PRIMITIVE,
+  JSMN_STRING,
   JSMN_PRIMITIVE,
   JSMN_PRIMITIVE
 };
