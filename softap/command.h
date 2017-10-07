@@ -10,7 +10,7 @@
 
 #include "Particle.h"
 #include "softap_http.h"
-#include "config.h"
+#include "../config.h"
 #include <jsmn.h>
 #define JSON_DEBUG(x) Serial.printlnf x
 

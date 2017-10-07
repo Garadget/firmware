@@ -175,8 +175,8 @@ int JSONRequestCommand::parse_json_request(Reader& reader, const char* const key
 }
 
 int SetConfigCommand::execute(Reader& o_reader, Writer& o_writer) {
-  //o_config = c_config::f_getInstance();
   int n_result = parse_json_request(o_reader, KEY, TYPE, arraySize(KEY));
+  o_config.f_save();
   produce_response(o_writer, n_result);
   return n_result;
 }

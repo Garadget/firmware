@@ -28,7 +28,7 @@ function f_getRequest(s_url, a_handlers) {
       var a_tests = {
         'get-config':  {
           sys:"0.6.2", id:"330038000451353530353431",ver:"1.13",mac:"00:00:00:00:00:00",
-          ssid:"TP-LINK",rdt:1000,mtt:10000,rlt:300,rlp:1000,srr:3,srt:15,
+          ssid:"TP-LINK",rdt:1000,mtt:10000,rlt:300,rlp:1000,srt:15,
           nme:"Garage",mqon:255,mqip:"255.255.255.255",mqpt:65535,mqto:65535,mqtt:2
         },
         'scan-ap': {scans:[

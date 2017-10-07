@@ -10,7 +10,8 @@ todo.txt
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
-node_modules/*
+node_modules/
+*.bak
 
 # Windows Installer files
 *.cab

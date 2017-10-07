@@ -20,7 +20,7 @@ c_timeout::c_timeout(uint16_t* p_newDuration) {
 
 void c_timeout::f_setDuration(uint16_t n_newDuration) {
     n_duration = n_newDuration;
-    p_duration = &n_duration;
+    f_setDuration(&n_duration);
 }
 
 void c_timeout::f_setDuration(uint16_t* p_newDuration) {
@@ -28,6 +28,10 @@ void c_timeout::f_setDuration(uint16_t* p_newDuration) {
 }
 
 void c_timeout::f_start() {
+  if (!*p_duration) {
+    f_stop();
+    return;
+  }
   b_running = TRUE;
   n_timerStart = millis();
   n_timerEnd = n_timerStart + *p_duration;

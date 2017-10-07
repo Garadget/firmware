@@ -50,7 +50,6 @@ function f_loadConfig(f_done) {
 
       f_populateSelect('mqto', ['1 second', 1e3, '2 seconds', 2e3, '3 seconds', 3e3, '5 seconds', 5e3, '10 seconds', 1e4, '30 seconds', 3e4, '1 minute', 6e4, '5 minutes', 3e5], 5e3, a_response.mqto);
       f_populateSelect('rdt', ['twice per second', 5e2, 'every second', 1e3, 'every 2 seconds', 2e3, 'every 3 seconds', 3e3, 'every 5 seconds', 5e3, 'every 10 seconds', 1e4, 'twice per minute', 3e4, 'every minute', 6e4], 1e3, a_response.rdt);
-      f_populateSelect('srr', [1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 3, a_response.srr);
 
       var n_value, a_options = [];
       for (n_value in a_securityTypes) {
@@ -71,7 +70,7 @@ function f_loadConfig(f_done) {
         a_options[a_options.length] = n_value + '%';
         a_options[a_options.length] = n_value;
       }
-      f_populateSelect('srt', a_options, 15, a_response.srt);
+      f_populateSelect('srt', a_options, 10, a_response.srt);
 
       a_options = [];
       for (n_value = 5; n_value <= 30; n_value++) {
@@ -133,8 +132,8 @@ function f_apScan() {
           if (!a_network.sec)
             b_showPassword = false;
         }
-        s_html += '<li><input type="radio" name="ap" value="' + n_network +
-          '"' + (window.s_ssid == a_network.ssid ? 'checked' : '') + ' onclick="f_apChange()" /><div>' +
+        s_html += '<li><input type=radio name=ap value=' + n_network +
+          (window.s_ssid == a_network.ssid ? 'checked' : '') + ' onclick="f_apChange()" /><div>' +
           a_network.ssid + '<span>' + (a_securityTypes[a_network.sec] ?
           a_securityTypes[a_network.sec] + ', ' : '') +
           f_signalStrength(a_network.rssi) + '</span></div></li>';
@@ -146,7 +145,7 @@ function f_apScan() {
       f_message('Error Scanning Networks', true);
     },
     regardless: function() {
-      s_html += '<li><input type="radio" name="ap" value="-1"' + (b_ssidFound ? '' : 'checked') +
+      s_html += '<li><input type=radio name=ap value="-1"' + (b_ssidFound ? '' : ' checked') +
         ' onclick="f_apChange(this.value)" onclick="f_apChange()" /><div>Enter Manually<span>Use For Hidden or Currently Unavailable Networks</span></div></li>';
       e_apList.innerHTML = s_html;
       o_val.f_checkValid('pass,ssid');
@@ -240,7 +239,7 @@ function f_formSubmit() {
       if (a_response.r !== 0)
         return f_configError(a_response.r);
       var a_settings = {},
-        a_props = {nme:0,rdt:1,mtt:1,rlt:1,rlp:1,srr:1,srt:1,mqtt:1,mqip:0,mqpt:1,mqto:1};
+        a_props = {nme:0,rdt:1,mtt:1,rlt:1,rlp:1,srt:1,mqtt:1,mqip:0,mqpt:1,mqto:1};
       for (var s_prop in a_props) {
         var s_val = f_inputValue(s_prop);
         if (a_props[s_prop])
@@ -257,7 +256,7 @@ function f_formSubmit() {
           f_message('Connecting WiFi...');
           f_postRequest('connect-ap', {idx: 0}, {
             success: function(a_response) {
-              f_message('All Set!');
+              f_message('All Set! Leaving Setup...');
             }
           });
         },

@@ -16,9 +16,9 @@ c_config& c_config::f_getInstance() {
 
 /** constructor */
 c_config::c_config() {
+  a_state.n_lastEvent = millis();
   f_load();
   o_timezones.f_setConfig(String(a_config.s_timeZone));
-  Particle.variable("doorConfig", s_config, STRING);
 }
 
 /**
@@ -48,7 +48,6 @@ bool c_config::f_load() {
 * validates the current configuration against the boundaries
 */
 int8_t c_config::f_validate() {
-  f_update();
   return f_parse(String(s_config), TRUE);
 }
 
@@ -69,40 +68,12 @@ int8_t c_config::f_reset() {
 }
 
 /**
-* Generates the string for door configuration variables
-*/
-void c_config::f_update() {
-
-  sprintf(
-    s_config,
-    "sys=%s|ver=%u.%u|rdt=%u|mtt=%u|rlt=%u|rlp=%u|srr=%u|srt=%u|aev=%u|aot=%u|ans=%u|ane=%u|tzo=%s|nme=%s",
-    System.version().c_str(),
-    a_config.n_versionMajor,
-    a_config.n_versionMinor,
-    a_config.n_readTime,
-    a_config.n_motionTime,
-    a_config.n_relayTime,
-    a_config.n_relayPause,
-    a_config.n_sensorReads,
-    a_config.n_sensorThreshold,
-    a_config.n_alertEvents,
-    a_config.n_alertOpenTimeout,
-    a_config.n_alertNightStart,
-    a_config.n_alertNightEnd,
-    a_config.s_timeZone,
-    a_config.s_deviceName
-  );
-}
-
-/**
 * Parses received configuration string and updates the values
 */
 int8_t c_config::f_parse(String s_newConfig, bool b_validate = false) {
 
   if (s_newConfig.equals("defaults")) {
-    #ifdef APPDEBUG
-      Serial.println("Loading default configuration");
-    #endif
+    Log.info("Config - loading defaults");
     return f_reset();
   }
 
@@ -134,10 +105,8 @@ int8_t c_config::f_parse(String s_newConfig, bool b_validate = false) {
   }
   while (n_end != -1);
 
-  if (n_updates) {
-    f_update();
+  if (n_updates)
     f_save();
-  }
   return n_updates;
 }
 
@@ -145,9 +114,8 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
 
   int n_value;
 
-  if (s_param.equals("ver")) {
+  if (s_param.equals("ver"))
     return 0;
-  }
 
   if (s_param.equals("nme")) {
     if (s_value.equals(a_config.s_deviceName))
@@ -193,16 +161,6 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
     if (n_value == a_config.n_relayPause)
       return 0;
     a_config.n_relayPause = n_value;
-    return 1;
-  }
-
-  if (s_param.equals("srr")) {
-    n_value = s_value.toInt();
-    if (n_value < 1 || n_value > 20)
-      return -1;
-    if (n_value == a_config.n_sensorReads)
-      return 0;
-    a_config.n_sensorReads = n_value;
     return 1;
   }
 
@@ -263,10 +221,7 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
 
     if (s_value.equals(a_config.s_timeZone))
       return 0;
-    #ifdef APPDEBUG
-      Serial.print("Updated Timezone, time now: ");
-      Serial.println(Time.timeStr());
-    #endif
+    Log.info("Config - updated Timezone, time now: %s", Time.timeStr().c_str());
     s_value.toCharArray(a_config.s_timeZone, 25);
     return 1;
   }
@@ -293,15 +248,6 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
       a_config.n_mqttBrokerIp[n_octet] = n_value;
       n_start = n_end + 1;
     }
-    #ifdef APPDEBUG
-      Serial.printlnf(
-        "Updated IP address, new value: %u.%u.%u.%u\n",
-        a_config.n_mqttBrokerIp[0],
-        a_config.n_mqttBrokerIp[1],
-        a_config.n_mqttBrokerIp[2],
-        a_config.n_mqttBrokerIp[3]
-    );
-    #endif
     return n_return;
   }
 
@@ -337,7 +283,7 @@ void c_config::f_getJsonConfig(char* s_buffer) {
 
   sprintf(
     s_buffer,
-    "{\"sys\":\"%s\",\"ver\":\"%u.%u\",\"id\":\"%s\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srr\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqtt\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
+    "{\"sys\":\"%s\",\"ver\":\"%u.%u\",\"id\":\"%s\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqtt\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
     System.version().c_str(), // +11b
     a_config.n_versionMajor,
     a_config.n_versionMinor,
@@ -347,7 +293,6 @@ void c_config::f_getJsonConfig(char* s_buffer) {
     a_config.n_motionTime,
     a_config.n_relayTime,
     a_config.n_relayPause,
-    a_config.n_sensorReads,
     a_config.n_sensorThreshold,
     a_config.s_deviceName,
     a_config.n_protocols,
@@ -360,25 +305,77 @@ void c_config::f_getJsonConfig(char* s_buffer) {
   );
 }
 
-/*
-void c_config::f_setJsonConfig(char* s_buffer) {
-
-}
-*/
-/**
- * Requests device name from cloud
- */
-void c_config::f_requestName() {
-  Particle.publish("spark/device/name");
-}
-
 /**
 * Saves specified string as device name
 */
 void c_config::f_setName(String s_name) {
   s_name.replace('_', ' ').toCharArray(a_config.s_deviceName, MAXNAMESIZE);
-  #ifdef APPDEBUG
-    Serial.print("Renamed to ");
-    Serial.println(s_name);
-  #endif
+  Log.info("Config - name changed to %s", s_name.c_str());
+}
+
+/**
+ * Translates enum state to string
+ */
+const char* c_config::f_statusString(c_doorStatus n_status) {
+  switch (n_status) {
+    case STATUS_CLOSED:
+      return "closed";
+    case STATUS_OPEN:
+      return "open";
+    case STATUS_CLOSING:
+      return "closing";
+    case STATUS_OPENING:
+      return "opening";
+    case STATUS_STOPPED:
+      return "stopped";
+    case STATUS_INIT:
+      return "initialized";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * Translates string state to enum
+ */
+c_doorStatus c_config::f_statusEnum(String s_status) {
+  if (s_status.startsWith("close"))
+    return STATUS_CLOSED;
+  if (s_status.equals("open"))
+    return STATUS_OPEN;
+  if (s_status.equals("closing"))
+    return STATUS_CLOSING;
+  if (s_status.equals("opening"))
+    return STATUS_OPENING;
+  if (s_status.startsWith("stop"))
+    return STATUS_STOPPED;
+  return STATUS_UNKNOWN;
+}
+
+/**
+ * Formats seconds in compact human-readable string
+ */
+void c_config::f_formatTime(uint32_t n_time, char* s_time) {
+  n_time /= 1000;
+  char s_units = 's';
+  if (n_time >= 120) {
+    s_units = 'm';
+    n_time /= 60;
+    if (n_time >= 120) {
+      s_units = 'h';
+      n_time /= 60;
+      if (n_time >= 48) {
+        s_units = 'd';
+        n_time /= 24;
+      }
+    }
+  }
+  sprintf(s_time, "%lu%c", n_time, s_units);
+}
+
+/**
+ * set human-readable string with time since last status change
+ */
+void c_config::f_timeInStatus(char* s_time) {
+  f_formatTime(millis() - a_state.n_lastEvent, s_time);
 }

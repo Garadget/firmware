@@ -12,9 +12,8 @@
 
 #include "Particle.h"
 #include "softap_http.h"
-#include "door.h"
-#include "config.h"
 #include "command.h"
+#include "config.h"
 
 struct c_page {
     const char* url;
@@ -23,6 +22,6 @@ struct c_page {
     const bool force_type;
 };
 
-void f_pageHandler(const char* url, ResponseCallback* cb, void* cbArg, Reader* body, Writer* result, void* reserved);
+void f_pageHandler(const char* s_url, ResponseCallback* f_callback, void* cbArg, Reader* o_request, Writer* o_response, void* p_reserved);
 
 #endif
