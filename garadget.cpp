@@ -45,10 +45,12 @@ c_relay o_relay = c_relay();
 c_sensor o_sensor = c_sensor();
 c_alert o_alert = c_alert();
 c_mqtt o_mqtt = c_mqtt();
-// mqtt
 
 void setup() {
-  WiFi.connect();
+#ifdef APPDEBUG
+  // wait 5 seconds for "M" button in debug mode to start serial interface
+  while (!System.buttonPushed() && millis() < 5000);
+#endif
   o_cloud.f_init();
   o_mqtt.f_init();
 }

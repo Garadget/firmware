@@ -39,7 +39,7 @@ bool c_config::f_load() {
     }
     a_config.n_versionMajor = VERSION_MAJOR;
     a_config.n_versionMinor = VERSION_MINOR;
-    f_save();
+    f_save("upgrade");
   }
   return TRUE;
 }
@@ -54,7 +54,13 @@ int8_t c_config::f_validate() {
 /**
 * Saves updated configuration variables to EEPROM
 */
-void c_config::f_save() {
+void c_config::f_save(const char* s_message) {
+  c_message a_message = {
+    "config",
+    MSG_CONFIG,
+    s_message
+  };
+  f_handle(a_message);
   EEPROM.put(0, a_config);
 }
 
@@ -105,8 +111,10 @@ int8_t c_config::f_parse(String s_newConfig, bool b_validate = false) {
   }
   while (n_end != -1);
 
-  if (n_updates)
-    f_save();
+  if (n_updates) {
+    Log.info("config - parameters updated: %u", n_updates);
+    f_save(s_newConfig.c_str());
+  }
   return n_updates;
 }
 
@@ -270,6 +278,7 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
     a_config.n_mqttTimeout = n_value;
     return 1;
   }
+
   return -1;
 }
 

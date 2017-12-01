@@ -32,6 +32,7 @@ typedef struct {
 
 // forward declaration of global event handler function
 bool f_handle(const c_message& a_message);
+class c_config;
 
 class c_node {
   public:

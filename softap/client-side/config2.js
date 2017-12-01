@@ -48,7 +48,7 @@ function f_loadConfig(f_done) {
       for (var n_prop = 0; n_prop < a_props.length; n_prop++)
         f_inputValue(a_props[n_prop], a_response[a_props[n_prop]]);
 
-      f_populateSelect('mqto', ['1 second', 1e3, '2 seconds', 2e3, '3 seconds', 3e3, '5 seconds', 5e3, '10 seconds', 1e4, '30 seconds', 3e4, '1 minute', 6e4, '5 minutes', 3e5], 5e3, a_response.mqto);
+      f_populateSelect('mqto', ['1 second', 1, '2 seconds', 2, '3 seconds', 3, '5 seconds', 5, '10 seconds', 10, '15 seconds', 15, '30 seconds', 30, '1 minute', 60, '5 minutes', 300], 15, a_response.mqto);
       f_populateSelect('rdt', ['twice per second', 5e2, 'every second', 1e3, 'every 2 seconds', 2e3, 'every 3 seconds', 3e3, 'every 5 seconds', 5e3, 'every 10 seconds', 1e4, 'twice per minute', 3e4, 'every minute', 6e4], 1e3, a_response.rdt);
 
       var n_value, a_options = [];
@@ -126,16 +126,19 @@ function f_apScan() {
       });
 
       for (n_network = 0; n_network < a_networks.length; n_network++) {
+        var s_checked = '';
         var a_network = a_networks[n_network];
-        if (window.s_ssid == a_network.ssid) {
+        if (!b_ssidFound && window.s_ssid == a_network.ssid) {
           b_ssidFound = true;
+          s_checked = ' checked';
           if (!a_network.sec)
             b_showPassword = false;
         }
         s_html += '<li><input type=radio name=ap value=' + n_network +
-          (window.s_ssid == a_network.ssid ? 'checked' : '') + ' onclick="f_apChange()" /><div>' +
+          s_checked + ' onclick="f_apChange()" /><div>' +
           a_network.ssid + '<span>' + (a_securityTypes[a_network.sec] ?
           a_securityTypes[a_network.sec] + ', ' : '') +
+          'Ch' + a_network.ch + ', ' +
           f_signalStrength(a_network.rssi) + '</span></div></li>';
       }
       if (!n_network)

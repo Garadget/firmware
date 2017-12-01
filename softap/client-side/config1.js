@@ -250,7 +250,7 @@ var c_validator = function() {
     this.a_tests[1] = [];
     var n_value = f_inputValue('ap');
     if ((n_value < 0 && !parseInt(f_inputValue('ap-sec'))) ||
-      (n_value >=0 && !a_networks[n_value].sec)) {
+      (n_value >= 0 && !a_networks[n_value].sec)) {
       f_boxPass(false);
       return true;
     }

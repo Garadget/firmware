@@ -11,10 +11,13 @@
 
 bool c_particle::f_init() {
   b_enabled = f_getConfig().a_config.n_protocols & 0b01;
+
   if (!b_enabled) {
+    Log.info("Cloud - disabled");
     Particle.disconnect();
     return FALSE;
   }
+  Log.info("Cloud - enabled");
   Particle.connect();
   b_init = TRUE;
   return TRUE;
@@ -85,11 +88,13 @@ bool c_particle::f_receive(const c_message& a_message) {
 
     // state change - publish
     case MSG_STATUS:
-      f_publishStatus(*(c_doorStatus*)a_message.p_payload);
+      if (b_enabled)
+        f_publishStatus(*(c_doorStatus*)a_message.p_payload);
       break;
 
     case MSG_ALERT:
-      f_publishAlert((char*)a_message.p_payload);
+      if (b_enabled)
+        f_publishAlert((char*)a_message.p_payload);
       break;
   }
   return TRUE;
@@ -102,13 +107,6 @@ int c_particle::f_receiveConfig(String s_config) {
   Log.info("Cloud - new config: %s", s_config.c_str());
   if (!f_getConfig().f_parse(s_config, FALSE))
     return FALSE;
-
-  c_message a_message = {
-    s_source,
-    MSG_CONFIG,
-    &s_config
-  };
-  return f_handle(a_message);
 }
 
 /**

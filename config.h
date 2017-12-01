@@ -12,6 +12,7 @@
 
 #include "application.h"
 #include "utils/timezones.h"
+#include "nodes/node.h"
 #include "global.h"
 
 enum c_doorStatus {
@@ -109,8 +110,9 @@ class c_config {
 
     /**
      * Saves updated config to EEPROM
+     * @param[in] s_message string containing the event message
      */
-    void f_save();
+    void f_save(const char* s_message = nullptr);
 
     /**
      * Formats seconds in compact human-readable string
