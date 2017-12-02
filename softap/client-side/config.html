@@ -72,7 +72,7 @@
         <div class="ia">
           <input type="password" name="pass" id="ap-pass" value="" />
           <img src="show.svg" />
-          <div title="Toggle Visibility" class="ab" onclick="f_togglePass()"></div>
+          <div title="Toggle Visibility" class="ab" onclick="f_togglePass('ap-pass')"></div>
         </div>
       </div>
     </div>
@@ -100,6 +100,20 @@
           <label>Device Topic ID:</label>
           <input type="text" name="nme" value="door" />
           <div class="rn">Name uniquely identifying the device in MQTT topics e.g. /garadget/TOPIC_ID/open</div>
+        </div>
+        <div class="fr">
+          <label>Login:</label>
+          <input type="text" name="mqus" value="" />
+          <div class="rn">Optional, MQTT login name</div>
+        </div>
+        <div class="fr">
+          <label>Password:</label>
+          <div class="ia">
+            <input type="password" name="mqpw" id="mqtt-pass" value="" />
+            <img src="show.svg" />
+            <div title="Toggle Visibility" class="ab" onclick="f_togglePass('mqtt-pass')"></div>
+          </div>
+          <div class="rn">Optional, MQTT password</div>
         </div>
         <div class="fr">
           <label>Reconnect Timeout:</label>

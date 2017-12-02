@@ -76,7 +76,7 @@ int8_t c_config::f_reset() {
 /**
 * Parses received configuration string and updates the values
 */
-int8_t c_config::f_parse(String s_newConfig, bool b_validate = false) {
+int8_t c_config::f_parse(String s_newConfig, bool b_validate) {
 
   if (s_newConfig.equals("defaults")) {
     Log.info("Config - loading defaults");
@@ -269,6 +269,22 @@ int8_t c_config::f_setValue(String s_param, String s_value) {
     return 1;
   }
 
+  if (s_param.equals("mqus")) {
+    if (s_value.equals(a_config.s_mqttBrokerUser))
+      return 0;
+    s_value = c_config::f_escapeJson(s_value);
+    s_value.toCharArray(a_config.s_mqttBrokerUser, sizeof(a_config.s_mqttBrokerUser));
+    return 1;
+  }
+
+  if (s_param.equals("mqpw")) {
+    if (s_value.equals(a_config.s_mqttBrokerPass))
+      return 0;
+    s_value = c_config::f_escapeJson(s_value);
+    s_value.toCharArray(a_config.s_mqttBrokerPass, sizeof(a_config.s_mqttBrokerPass));
+    return 1;
+  }
+
   if (s_param.equals("mqto")) {
     n_value = s_value.toInt();
     if (n_value > 0xFFFF)
@@ -292,7 +308,7 @@ void c_config::f_getJsonConfig(char* s_buffer) {
 
   sprintf(
     s_buffer,
-    "{\"sys\":\"%s\",\"ver\":\"%u.%u\",\"id\":\"%s\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqtt\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqto\":%u}",
+    "{\"sys\":\"%s\",\"ver\":\"%u.%u\",\"id\":\"%s\",\"ssid\":\"%s\",\"rdt\":%u,\"mtt\":%u,\"rlt\":%u,\"rlp\":%u,\"srt\":%u,\"nme\":\"%s\",\"mqtt\":%u,\"mqip\":\"%u.%u.%u.%u\",\"mqpt\":%u,\"mqus\":\"%s\",\"mqto\":%u}",
     System.version().c_str(), // +11b
     a_config.n_versionMajor,
     a_config.n_versionMinor,
@@ -303,13 +319,14 @@ void c_config::f_getJsonConfig(char* s_buffer) {
     a_config.n_relayTime,
     a_config.n_relayPause,
     a_config.n_sensorThreshold,
-    a_config.s_deviceName,
+    c_config::f_escapeJson(String(a_config.s_deviceName)).c_str(),
     a_config.n_protocols,
     a_config.n_mqttBrokerIp[0],
     a_config.n_mqttBrokerIp[1],
     a_config.n_mqttBrokerIp[2],
     a_config.n_mqttBrokerIp[3],
     a_config.n_mqttBrokerPort,
+    c_config::f_escapeJson(String(a_config.s_mqttBrokerUser)).c_str(),
     a_config.n_mqttTimeout
   );
 }
@@ -318,7 +335,7 @@ void c_config::f_getJsonConfig(char* s_buffer) {
 * Saves specified string as device name
 */
 void c_config::f_setName(String s_name) {
-  s_name.replace('_', ' ').toCharArray(a_config.s_deviceName, MAXNAMESIZE);
+  c_config::f_escapeJson(s_name).replace('_', ' ').toCharArray(a_config.s_deviceName, MAXNAMESIZE);
   Log.info("Config - name changed to %s", s_name.c_str());
 }
 
@@ -387,4 +404,18 @@ void c_config::f_formatTime(uint32_t n_time, char* s_time) {
  */
 void c_config::f_timeInStatus(char* s_time) {
   f_formatTime(millis() - a_state.n_lastEvent, s_time);
+}
+
+/**
+ * Prepares string to be safely used in JSON
+ */
+String c_config::f_escapeJson(String s_string) {
+  String s_result = "";
+  for (uint8_t n_char = 0; n_char < s_string.length(); n_char++) {
+    char c_char = s_string.charAt(n_char);
+    if (c_char < 0x20 || c_char > 0x7E)
+      continue;
+    s_result.concat(c_char);
+  }
+  return s_result.replace("\"", "\\\"").replace("\\", "\\\\");
 }

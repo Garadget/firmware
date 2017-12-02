@@ -188,7 +188,7 @@ bool SetConfigCommand::parsed_value(unsigned n_key, jsmntok_t* a_type, char* s_v
 }
 
 c_config& SetConfigCommand::o_config = c_config::f_getInstance();
-const char* SetConfigCommand::KEY[11] = {"nme","rdt","mtt","rlt","rlp","srr","srt","mqtt","mqip","mqpt","mqto"};
+const char* SetConfigCommand::KEY[13] = {"nme","rdt","mtt","rlt","rlp","srr","srt","mqtt","mqip","mqpt","mqus","mqpw","mqto"};
 const jsmntype_t SetConfigCommand::TYPE[] = {
   JSMN_STRING,
   JSMN_PRIMITIVE,
@@ -200,5 +200,7 @@ const jsmntype_t SetConfigCommand::TYPE[] = {
   JSMN_PRIMITIVE,
   JSMN_STRING,
   JSMN_PRIMITIVE,
+  JSMN_STRING,
+  JSMN_STRING,
   JSMN_PRIMITIVE
 };

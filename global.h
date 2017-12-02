@@ -47,7 +47,7 @@
 // I2C message buffer size
 #define PORT_BUFFER 0x20
 
-#define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=10|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage|mqtt=1|mqip=0.0.0.0|mqpt=1883|mqto=5000"
+#define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=10|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage|mqtt=1|mqip=0.0.0.0|mqpt=1883|mqus=|mqpw=|mqto=5000"
 
 #define TIMER_VARS 1000 // milliseconds between Particle variables updates
 #define TIMER_SYNC 24 * 60 * 60 * 1000 // milliseconds between time synchronization with server

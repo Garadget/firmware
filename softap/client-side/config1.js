@@ -148,8 +148,8 @@ function f_copyId() {
   window.prompt('Copy to clipboard: Ctrl + C, Enter', f_inputValue('id'));
 }
 
-function f_togglePass() {
-  var e_input = f_getById('ap-pass');
+function f_togglePass(s_id) {
+  var e_input = f_getById(s_id);
   e_input.type = e_input.type == 'password' ? 'text' : 'password';
 }
 

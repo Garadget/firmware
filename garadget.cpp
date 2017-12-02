@@ -51,6 +51,7 @@ void setup() {
   // wait 5 seconds for "M" button in debug mode to start serial interface
   while (!System.buttonPushed() && millis() < 5000);
 #endif
+  WiFi.connect();
   o_cloud.f_init();
   o_mqtt.f_init();
 }

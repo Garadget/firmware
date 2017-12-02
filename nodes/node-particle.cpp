@@ -105,8 +105,7 @@ bool c_particle::f_receive(const c_message& a_message) {
  */
 int c_particle::f_receiveConfig(String s_config) {
   Log.info("Cloud - new config: %s", s_config.c_str());
-  if (!f_getConfig().f_parse(s_config, FALSE))
-    return FALSE;
+  return f_getConfig().f_parse(s_config, FALSE);
 }
 
 /**

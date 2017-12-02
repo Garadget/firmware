@@ -48,6 +48,8 @@ class c_config {
       uint8_t n_protocols;
       uint8_t n_mqttBrokerIp[4];
       uint16_t n_mqttBrokerPort;
+      char s_mqttBrokerUser[32];
+      char s_mqttBrokerPass[32];
       uint16_t n_mqttTimeout;
     } c_doorConfig;
 
@@ -72,7 +74,7 @@ class c_config {
    * @param[in] b_validate ignores out of range values if false, resets config to defaults if true
    * @return number of updated parameters
    */
-    int8_t f_parse(String s_config, bool b_validate);
+    int8_t f_parse(String s_config, bool b_validate = false);
 
     /**
      * Sets an individual configuration parameter
@@ -126,6 +128,14 @@ class c_config {
      * @param[out] s_time result string
      */
     void f_timeInStatus(char* s_time);
+
+    /**
+     * Prepares string to be safely used in JSON
+     * @param[in] s_string unsafe string
+     * @return String result
+     */
+    static String f_escapeJson(String s_string);
+
 
   protected:
     c_config();

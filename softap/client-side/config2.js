@@ -44,7 +44,7 @@ function f_loadConfig(f_done) {
   f_getRequest('load-config', {
     success: function(a_response) {
 
-      var a_props = ['id','sys','ver','mqtt','mqip','mqpt','nme'];
+      var a_props = ['id','sys','ver','mqtt','mqip','mqus','mqpt','nme'];
       for (var n_prop = 0; n_prop < a_props.length; n_prop++)
         f_inputValue(a_props[n_prop], a_response[a_props[n_prop]]);
 
@@ -242,7 +242,7 @@ function f_formSubmit() {
       if (a_response.r !== 0)
         return f_configError(a_response.r);
       var a_settings = {},
-        a_props = {nme:0,rdt:1,mtt:1,rlt:1,rlp:1,srt:1,mqtt:1,mqip:0,mqpt:1,mqto:1};
+        a_props = {nme:0,rdt:1,mtt:1,rlt:1,rlp:1,srt:1,mqtt:1,mqip:0,mqpt:1,mqus:0,mqpw:0,mqto:1};
       for (var s_prop in a_props) {
         var s_val = f_inputValue(s_prop);
         if (a_props[s_prop])

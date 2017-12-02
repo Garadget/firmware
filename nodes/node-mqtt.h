@@ -29,6 +29,7 @@ class c_mqtt : public c_node {
   protected:
     bool f_connect();
     void f_publishStatus(c_doorStatus n_status);
+    const char* f_getTopicId();
     const char s_source[8] = "mqtt";
     uint32_t n_lastConnect = 0;
     static MQTT* o_client;

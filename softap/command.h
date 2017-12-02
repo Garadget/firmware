@@ -44,7 +44,7 @@ class JSONRequestCommand : public JSONCommand {
 };
 
 class SetConfigCommand : public JSONRequestCommand {
-    static const char* KEY[11];
+    static const char* KEY[13];
     static const jsmntype_t TYPE[];
     static c_config& o_config;
     bool parsed_value(unsigned key, jsmntok_t* t, char* str);
