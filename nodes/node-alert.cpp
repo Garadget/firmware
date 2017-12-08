@@ -66,7 +66,7 @@ void c_alert::f_fireAlert(const char* s_type, const char* s_data) {
   );
 
   c_message a_message = {
-    s_source,
+    "alert",
     MSG_ALERT,
     s_alertData
   };

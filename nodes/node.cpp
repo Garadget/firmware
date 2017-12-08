@@ -1,6 +1,6 @@
 // $Id$
 /**
- * @file node.h
+ * @file node.cpp
  * @brief Abstract class for node implementations
  * @author Denis Grisak
  * @version 1.14

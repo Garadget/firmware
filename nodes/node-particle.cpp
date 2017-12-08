@@ -120,7 +120,7 @@ int c_particle::f_receiveState(String s_state) {
   }
 
   c_message a_message = {
-    s_source,
+    "cloud",
     MSG_COMMAND,
     &n_status
   };

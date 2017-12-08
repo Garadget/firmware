@@ -26,9 +26,7 @@ class c_relay : public c_node {
     c_timeout o_onTimer;
     c_timeout o_offTimer;
     c_doorStatus* n_status;
-
     uint8_t n_clicksLeft;
-    const char s_source[8] = "relay";
 };
 
 #endif

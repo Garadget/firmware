@@ -9,6 +9,11 @@
 
 #include "node-sensor.h"
 
+c_sensor& c_sensor::f_getInstance() {
+  static c_sensor o_sensor;
+  return o_sensor;
+}
+
 c_sensor::c_sensor() {
   // link config and status values
   c_config& o_config = f_getConfig();
@@ -66,6 +71,10 @@ bool c_sensor::f_isTripping() {
   return (f_read() > *n_threshold);
 }
 
+uint16_t c_sensor::f_getBase() {
+  return *n_base;
+}
+
 /**
  * Using laser sensor determines if door state has changed,
  *  handles the logic and updates
@@ -118,7 +127,7 @@ bool c_sensor::f_onChange(c_doorStatus n_newStatus) {
   *n_status = n_newStatus;
   f_getConfig().a_state.n_lastEvent = millis();
   c_message a_message = {
-    s_source,
+    "sensor",
     MSG_STATUS,
     n_status
   };

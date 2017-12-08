@@ -136,7 +136,7 @@ bool c_relay::f_receive(const c_message& a_message) {
   Log.info("Relay - new status: %s", c_config::f_statusString(n_newStatus));
   *n_status = n_newStatus;
   c_message a_newMessage = {
-    s_source,
+    "relay",
     MSG_STATUS,
     n_status
   };

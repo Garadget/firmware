@@ -15,13 +15,19 @@
 class c_sensor : public c_node {
 
   public:
+
+    static c_sensor& f_getInstance();
+    c_sensor(c_sensor const&);
+    void operator=(c_sensor const&);
+
     c_sensor();
     void f_process();
     c_doorStatus f_getState();
     bool f_receive(const c_message& a_message);
+    uint8_t f_read();
+    uint16_t f_getBase();
 
   protected:
-    uint8_t f_read();
     bool f_isTripping();
     bool f_onChange(c_doorStatus n_newStatus);
     void f_onMotionEnd();
@@ -33,7 +39,6 @@ class c_sensor : public c_node {
     uint16_t* n_base;
     uint8_t* n_threshold;
     uint16_t* n_readTime;
-    const char s_source[8] = "sensor";
 };
 
 #endif

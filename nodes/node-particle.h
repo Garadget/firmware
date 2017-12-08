@@ -40,7 +40,6 @@ class c_particle : public c_node {
     char s_doorConfig[MAXVARSIZE];
     char s_doorStatus[MAXVARSIZE];
     char s_netConfig[MAXVARSIZE];
-    const char s_source[8] = "cloud";
     bool b_boot = TRUE;
     bool b_init = TRUE;
 };

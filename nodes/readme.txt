@@ -4,7 +4,6 @@ door object will scan all nodes for new synchronous events (like door sensor)
 nodes will call the processing loop in door to notify about asynchronous events (particle function call etc)
 
 nodes:
-- mqtt
 - i2c tester
 
 todo: use retained variables for state (maybe)
@@ -19,4 +18,4 @@ todo: dead man message
 todo: I2C interface
 todo: test everything
 
-todo: encrypt mqtt pass 
+todo: encrypt mqtt pass

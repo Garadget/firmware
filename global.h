@@ -46,6 +46,8 @@
 #define PORT_RANGE 0x10
 // I2C message buffer size
 #define PORT_BUFFER 0x20
+// I2C timeout for accessory data requests (mS)
+#define PORT_TIMEOUT 50
 
 #define DEFULT_CONFIG "rdt=1000|mtt=10000|rlt=300|rlp=1000|srr=3|srt=10|aev=0|aot=0|ans=0|ane=0|tzo=10112-7,20032-6|nme=Garage|mqtt=1|mqip=0.0.0.0|mqpt=1883|mqus=|mqpw=|mqto=5000"
 

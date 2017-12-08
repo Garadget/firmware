@@ -7,12 +7,9 @@
  * @license GPL v3
 
   This code is firmware for Garadget - cloud-enabled garage door controller.
-  For more information please visit http://www.garadget.com/
+  For more information visit http://www.garadget.com/
  */
 // $Log$
-
-// @todo: validate configuration settings when Loading
-// @todo: debounce the status messages
 
 #include "application.h"
 #include "global.h"
@@ -22,6 +19,7 @@
 #include "nodes/node-sensor.h"
 #include "nodes/node-alert.h"
 #include "nodes/node-mqtt.h"
+#include "nodes/port-test.h"
 #include "softap/webconfig.h"
 
 SYSTEM_MODE(MANUAL);
@@ -45,12 +43,14 @@ c_relay o_relay = c_relay();
 c_sensor o_sensor = c_sensor();
 c_alert o_alert = c_alert();
 c_mqtt o_mqtt = c_mqtt();
+c_test o_test = c_test();
 
 void setup() {
-#ifdef APPDEBUG
+  #ifdef APPDEBUG
   // wait 5 seconds for "M" button in debug mode to start serial interface
   while (!System.buttonPushed() && millis() < 5000);
 #endif
+  o_test.f_init();
   WiFi.connect();
   o_cloud.f_init();
   o_mqtt.f_init();

@@ -21,7 +21,8 @@ enum c_messageType {
   MSG_COMMAND,
   MSG_STATUS,
   MSG_CONFIG,
-  MSG_ALERT
+  MSG_ALERT,
+  MSG_PORT
 };
 
 typedef struct {
@@ -43,7 +44,6 @@ class c_node {
   protected:
     static c_config& f_getConfig();
     bool b_enabled = FALSE;
-    const char s_source[8] = "";
 };
 
 #endif

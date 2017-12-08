@@ -37,8 +37,6 @@ class c_alert : public c_node {
     uint32_t n_timeOpened = 0;
     uint8_t n_timeoutAlertsFired = 0;
     uint8_t n_nightAlertsFired = 0;
-
-    const char s_source[8] = "alert";
 };
 
 #endif
