@@ -14,5 +14,9 @@ todo: mqtt by domain name if dns is not cloud based
 todo: test switching protocols on/off
 
 todo: handle the mqtt commands
-todo: test everything
+todo: dead man message
+
 todo: I2C interface
+todo: test everything
+
+todo: encrypt mqtt pass 
