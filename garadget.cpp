@@ -19,8 +19,10 @@
 #include "nodes/node-sensor.h"
 #include "nodes/node-alert.h"
 #include "nodes/node-mqtt.h"
-#include "nodes/port-test.h"
 #include "softap/webconfig.h"
+#ifdef TESTPORT
+  #include "nodes/port-test.h"
+#endif
 
 SYSTEM_MODE(MANUAL);
 STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
@@ -43,14 +45,18 @@ c_relay o_relay = c_relay();
 c_sensor o_sensor = c_sensor();
 c_alert o_alert = c_alert();
 c_mqtt o_mqtt = c_mqtt();
-c_test o_test = c_test();
+#ifdef TESTPORT
+  c_test o_test = c_test();
+#endif
 
 void setup() {
   #ifdef APPDEBUG
-  // wait 5 seconds for "M" button in debug mode to start serial interface
-  while (!System.buttonPushed() && millis() < 5000);
+  // wait 3 seconds for "M" button in debug mode to start serial interface
+  while (!System.buttonPushed() && millis() < 3000);
 #endif
+#ifdef TESTPORT
   o_test.f_init();
+#endif
   WiFi.connect();
   o_cloud.f_init();
   o_mqtt.f_init();
