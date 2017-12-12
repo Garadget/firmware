@@ -3,6 +3,7 @@
  * @file timezones.h
  * @brief Implements DST aware time zone adjustment
  * @author Denis Grisak
+ * @version 1.18
  */
 // $Log$
 
