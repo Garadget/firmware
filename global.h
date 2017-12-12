@@ -6,21 +6,21 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 14
+#define VERSION_MINOR 17
 #define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
 #define VERSION_COMPAT 108
 
 // boolean constants
-//#define FALSE 0x00
-//#define TRUE 0x01
+// #define FALSE 0x00
+// #define TRUE 0x01
 
 // organization mode or generic Particle device
 #define ORGMODE TRUE
 
 // adds debug messages through the serial interface
-//#define APPDEBUG
+// #define APPDEBUG
 
 // add code supporting test appliance
 #define TESTPORT

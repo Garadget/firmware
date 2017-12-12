@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garadget main file
- * @version 1.13
+ * @version 1.18
  * @author Denis Grisak
  * @license GPL v3
 
@@ -13,12 +13,12 @@
 
 #include "application.h"
 #include "global.h"
-
+#include "config.h"
 #include "nodes/node-particle.h"
-#include "nodes/node-relay.h"
-#include "nodes/node-sensor.h"
-#include "nodes/node-alert.h"
 #include "nodes/node-mqtt.h"
+#include "nodes/node-sensor.h"
+#include "nodes/node-relay.h"
+#include "nodes/node-alert.h"
 #include "softap/webconfig.h"
 #ifdef TESTPORT
   #include "nodes/port-test.h"
@@ -40,26 +40,30 @@ STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
   );
 #endif
 
-c_particle o_cloud = c_particle();
+c_sensor& o_sensor = c_sensor::f_getInstance();
 c_relay o_relay = c_relay();
-c_sensor o_sensor = c_sensor();
-c_alert o_alert = c_alert();
+c_particle o_cloud = c_particle();
 c_mqtt o_mqtt = c_mqtt();
+c_alert o_alert = c_alert();
 #ifdef TESTPORT
   c_test o_test = c_test();
 #endif
 
 void setup() {
-  #ifdef APPDEBUG
+#ifdef APPDEBUG
   // wait 3 seconds for "M" button in debug mode to start serial interface
   while (!System.buttonPushed() && millis() < 3000);
 #endif
+c_config::f_getInstance().f_init();
+o_sensor.f_init();
+o_relay.f_init();
 #ifdef TESTPORT
   o_test.f_init();
 #endif
   WiFi.connect();
   o_cloud.f_init();
   o_mqtt.f_init();
+  o_alert.f_init();
 }
 
 void loop() {

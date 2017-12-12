@@ -3,7 +3,7 @@
  * @file node-relay.h
  * @brief Implements relay functions
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
@@ -15,7 +15,7 @@
 class c_relay : public c_node {
 
   public:
-    c_relay();
+    bool f_init();
     void f_process();
     bool f_receive(const c_message& a_message);
 

@@ -3,13 +3,13 @@
  * @file node-relay.cpp
  * @brief Implements relay functions
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
 #include "node-relay.h"
 
-c_relay::c_relay() {
+bool c_relay::f_init() {
   // link config and status values
   c_config& o_config = f_getConfig();
   n_status = &o_config.a_state.n_doorStatus;
@@ -21,6 +21,8 @@ c_relay::c_relay() {
   // configure hardware
   pinMode(PIN_RELAY, OUTPUT);
   digitalWrite(PIN_RELAY, LOW);
+
+  return TRUE;
 }
 
 void c_relay::f_process() {

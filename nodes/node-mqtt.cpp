@@ -3,7 +3,7 @@
  * @file node-mqtt.cpp
  * @brief Implements MQTT client
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
@@ -36,12 +36,15 @@ void c_mqtt::f_callback(char* s_topic, byte* s_payload, unsigned int n_length) {
 bool c_mqtt::f_init() {
 
   c_config& o_config = f_getConfig();
-  if (o_client)
-    delete o_client;
-
   b_enabled = o_config.a_config.n_protocols & 0b10;
-  if (!b_enabled) {
+
+  if (o_client != NULL) {
     o_client->disconnect();
+    delete o_client;
+    o_client = NULL;
+  }
+
+  if (!b_enabled) {
     Log.info("MQTT - disabled");
     return FALSE;
   }
@@ -56,7 +59,7 @@ bool c_mqtt::f_init() {
   );
 
   // connect to the server
-  return f_connect();
+  return TRUE;
 }
 
 bool c_mqtt::f_connect() {

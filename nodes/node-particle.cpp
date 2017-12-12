@@ -3,22 +3,23 @@
  * @file node-particle.cpp
  * @brief Implements Particle cloud interface
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
 #include "node-particle.h"
 
 bool c_particle::f_init() {
+
   b_enabled = f_getConfig().a_config.n_protocols & 0b01;
 
   if (!b_enabled) {
     Log.info("Cloud - disabled");
-    Particle.disconnect();
+    if (Particle.connected())
+      Particle.disconnect();
     return FALSE;
   }
   Log.info("Cloud - enabled");
-  Particle.connect();
   b_init = TRUE;
   return TRUE;
 }
@@ -28,6 +29,7 @@ bool c_particle::f_init() {
  * then initializes cloud features
  */
 void c_particle::f_declare() {
+
   if (!b_init || !Particle.syncTimeDone())
     return;
 
@@ -57,9 +59,12 @@ void c_particle::f_declare() {
 void c_particle::f_process() {
   if (!b_enabled)
     return;
+
   Particle.process();
-  if (!Particle.connected())
+  if (!Particle.connected()) {
+    Particle.connect();
     return;
+  }
 
   f_declare();
 
@@ -105,7 +110,7 @@ bool c_particle::f_receive(const c_message& a_message) {
  */
 int c_particle::f_receiveConfig(String s_config) {
   Log.info("Cloud - new config: %s", s_config.c_str());
-  return f_getConfig().f_parse(s_config, FALSE);
+  return f_getConfig().f_parse(s_config);
 }
 
 /**

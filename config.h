@@ -3,7 +3,7 @@
  * @file config.h
  * @brief Implements garadget configuration related functionality
  * @author Denis Grisak
- * @version 1.12
+ * @version 1.18
  */
 // $Log$
 
@@ -60,21 +60,18 @@ class c_config {
       uint16_t n_sensorBase;
     } c_deviceState;
 
-    static c_config& f_getInstance();
-    c_config(c_config const&);
-    void operator=(c_config const&);
-
     c_doorConfig a_config;
     c_deviceState a_state;
-    char s_config[MAXVARSIZE];
+
+    static c_config& f_getInstance();
+    bool f_init();
 
   /**
    * Parses the provided string and saves values to device's config'
    * @param[in] s_config String to parse and save
-   * @param[in] b_validate ignores out of range values if false, resets config to defaults if true
    * @return number of updated parameters
    */
-    int8_t f_parse(String s_config, bool b_validate = false);
+    int8_t f_parse(String s_config);
 
     /**
      * Sets an individual configuration parameter
@@ -112,7 +109,6 @@ class c_config {
 
     /**
      * Saves updated config to EEPROM
-     * @param[in] s_message string containing the event message
      */
     void f_save(const char* s_message = nullptr);
 
@@ -136,12 +132,13 @@ class c_config {
      */
     static String f_escapeJson(String s_string);
 
-
   protected:
-    c_config();
-    bool f_load();
+    c_config() {};
+    c_config(c_config const&);
+    void operator=(c_config const&);
+
     int8_t f_validate();
-    int8_t f_reset();
+    void f_reset();
     c_timezones o_timezones;
 };
 

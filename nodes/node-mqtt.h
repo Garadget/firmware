@@ -3,7 +3,7 @@
  * @file node-mqtt.h
  * @brief Implements MQTT client
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 

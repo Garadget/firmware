@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.12
+* @version 1.18
 */
 // $Log$
 
@@ -14,21 +14,19 @@ c_config& c_config::f_getInstance() {
   return o_config;
 }
 
-/** constructor */
-c_config::c_config() {
-  a_state.n_lastEvent = millis();
-  f_load();
-  o_timezones.f_setConfig(String(a_config.s_timeZone));
-}
-
 /**
 * Loads saved configuration from EEPROM or defaults
 */
-bool c_config::f_load() {
+bool c_config::f_init() {
+  a_state.n_lastEvent = millis();
 
   // read door config from EEPROM
   EEPROM.get(0, a_config);
-  f_validate();
+  if (!f_validate()) {
+    f_reset();
+    return FALSE;
+  }
+  Log.info("Config - validated");
 
   // if integrity check failed then load defaults
   uint16_t n_savedVersionId = a_config.n_versionMajor * 100 + a_config.n_versionMinor;
@@ -41,6 +39,7 @@ bool c_config::f_load() {
     a_config.n_versionMinor = VERSION_MINOR;
     f_save("upgrade");
   }
+  o_timezones.f_setConfig(String(a_config.s_timeZone));
   return TRUE;
 }
 
@@ -48,7 +47,22 @@ bool c_config::f_load() {
 * validates the current configuration against the boundaries
 */
 int8_t c_config::f_validate() {
-  return f_parse(String(s_config), TRUE);
+  return (
+    f_setValue(String("rdt"), String(a_config.n_readTime)) != -1 &&
+    f_setValue(String("mtt"), String(a_config.n_motionTime)) != -1 &&
+    f_setValue(String("rlt"), String(a_config.n_relayTime)) != -1 &&
+    f_setValue(String("rlp"), String(a_config.n_relayPause)) != -1 &&
+    f_setValue(String("srt"), String(a_config.n_sensorThreshold)) != -1 &&
+    f_setValue(String("aev"), String(a_config.n_alertEvents)) != -1 &&
+    f_setValue(String("aot"), String(a_config.n_alertOpenTimeout)) != -1 &&
+    f_setValue(String("ans"), String(a_config.n_alertNightStart)) != -1 &&
+    f_setValue(String("ane"), String(a_config.n_alertNightEnd)) != -1 &&
+    f_setValue(String("tzo"), String(a_config.s_timeZone)) != -1 &&
+    f_setValue(String("mqtt"), String(a_config.n_protocols)) != -1 &&
+//    f_setValue(String("mqip"), String(a_config.n_mqttBrokerIp)) == -1 &&
+    f_setValue(String("mqpt"), String(a_config.n_mqttBrokerPort)) != -1 &&
+    f_setValue(String("mqto"), String(a_config.n_mqttTimeout)) != -1
+  );
 }
 
 /**
@@ -67,24 +81,25 @@ void c_config::f_save(const char* s_message) {
 /**
 * Loads configuration with default values
 */
-int8_t c_config::f_reset() {
-  a_config.n_versionMajor = VERSION_MAJOR;
-  a_config.n_versionMinor = VERSION_MINOR;
-  return f_parse(DEFULT_CONFIG, FALSE) + 5;
+void c_config::f_reset() {
+  f_parse(String("defaults"));
 }
 
 /**
 * Parses received configuration string and updates the values
 */
-int8_t c_config::f_parse(String s_newConfig, bool b_validate) {
-
-  if (s_newConfig.equals("defaults")) {
-    Log.info("Config - loading defaults");
-    return f_reset();
-  }
+int8_t c_config::f_parse(String s_newConfig) {
 
   int n_updates = 0, n_result, n_start = 0, n_end;
   String s_param, s_value;
+
+  if (s_newConfig.equals("defaults")) {
+    Log.info("Config - loading defaults");
+    a_config.n_versionMajor = VERSION_MAJOR;
+    a_config.n_versionMinor = VERSION_MINOR;
+    s_newConfig = String(DEFULT_CONFIG);
+    n_updates = 5;
+  }
 
   do {
     n_end = s_newConfig.indexOf('=', n_start);
@@ -103,8 +118,8 @@ int8_t c_config::f_parse(String s_newConfig, bool b_validate) {
     }
 
     n_result = f_setValue(s_param, s_value);
-    if (b_validate && n_result < 0)
-      return f_reset();
+    if (n_result < 0)
+      continue;
 
     if (n_result > 0)
       n_updates++;
@@ -121,7 +136,6 @@ int8_t c_config::f_parse(String s_newConfig, bool b_validate) {
 int8_t c_config::f_setValue(String s_param, String s_value) {
 
   int n_value;
-
   if (s_param.equals("ver"))
     return 0;
 

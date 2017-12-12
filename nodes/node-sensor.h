@@ -3,7 +3,7 @@
  * @file node-sensor.h
  * @brief Implements laser sensor
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
@@ -20,7 +20,7 @@ class c_sensor : public c_node {
     c_sensor(c_sensor const&);
     void operator=(c_sensor const&);
 
-    c_sensor();
+    bool f_init();
     void f_process();
     c_doorStatus f_getState();
     bool f_receive(const c_message& a_message);
@@ -28,6 +28,7 @@ class c_sensor : public c_node {
     uint16_t f_getBase();
 
   protected:
+    c_sensor();
     bool f_isTripping();
     bool f_onChange(c_doorStatus n_newStatus);
     void f_onMotionEnd();

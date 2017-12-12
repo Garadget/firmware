@@ -3,7 +3,7 @@
  * @file node-sensor.cpp
  * @brief Implements laser sensor
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
@@ -15,6 +15,10 @@ c_sensor& c_sensor::f_getInstance() {
 }
 
 c_sensor::c_sensor() {
+}
+
+bool c_sensor::f_init() {
+
   // link config and status values
   c_config& o_config = f_getConfig();
   n_status = &o_config.a_state.n_doorStatus;
@@ -33,6 +37,7 @@ c_sensor::c_sensor() {
 
   // perform the initial scan
   f_getState();
+  return TRUE;
 }
 
 void c_sensor::f_process() {

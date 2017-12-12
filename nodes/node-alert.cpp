@@ -3,13 +3,13 @@
  * @file node-alert.cpp
  * @brief Implements alerts functionality
  * @author Denis Grisak
- * @version 1.14
+ * @version 1.18
  */
 // $Log$
 
 #include "node-alert.h"
 
-c_alert::c_alert() {
+bool c_alert::f_init() {
 
   // link config and status values
   c_config& o_config = f_getConfig();
@@ -21,6 +21,7 @@ c_alert::c_alert() {
   n_nightEnd = &o_config.a_config.n_alertNightEnd;
 
   f_handleStatus();
+  return TRUE;
 }
 
 void c_alert::f_process() {
@@ -120,7 +121,7 @@ void c_alert::f_handleStatus() {
     case STATUS_OPEN:
     case STATUS_STOPPED:
       if (*n_timeout && !o_timeout.f_isRunning()) {
-        o_timeout.f_setDuration(*n_timeout * 1000);
+        o_timeout.f_setDuration(*n_timeout * 1000 * 60);
         o_timeout.f_start();
         n_timeOpened = millis();
       }
