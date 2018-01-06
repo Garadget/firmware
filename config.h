@@ -3,7 +3,7 @@
  * @file config.h
  * @brief Implements garadget configuration related functionality
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
@@ -17,12 +17,13 @@
 
 enum c_doorStatus {
   STATUS_UNKNOWN = 0,
+  STATUS_NONE = 0,
   STATUS_CLOSED,
   STATUS_OPEN,
   STATUS_CLOSING,
   STATUS_OPENING,
   STATUS_STOPPED,
-  STATUS_INIT
+  STATUS_INIT,
 };
 
 class c_config {
@@ -62,6 +63,7 @@ class c_config {
 
     c_doorConfig a_config;
     c_deviceState a_state;
+    bool b_updated = false;
 
     static c_config& f_getInstance();
     bool f_init();
@@ -88,10 +90,16 @@ class c_config {
     void f_setName(String s_name);
 
     /**
-     * Returns JSON for current config
+     * Populates JSON for current config
      * @param[out] s_buffer Buffer for JSON result
      */
     void f_getJsonConfig(char* s_buffer);
+
+    /**
+     * Populates JSON for current status
+     * @param[out] s_buffer Buffer for JSON result
+     */
+    void f_getJsonStatus(char* s_buffer);
 
     /**
      * Translates door status enum to string
@@ -110,7 +118,7 @@ class c_config {
     /**
      * Saves updated config to EEPROM
      */
-    void f_save(const char* s_message = nullptr);
+    void f_save();
 
     /**
      * Formats seconds in compact human-readable string
@@ -131,6 +139,11 @@ class c_config {
      * @return String result
      */
     static String f_escapeJson(String s_string);
+
+    /**
+     * Publishes message about config update
+     */
+    void f_process();
 
   protected:
     c_config() {};

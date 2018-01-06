@@ -3,7 +3,7 @@
  * @file node.cpp
  * @brief Abstract class for I2C port accessory
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 

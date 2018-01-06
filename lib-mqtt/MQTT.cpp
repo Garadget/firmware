@@ -1,7 +1,5 @@
 #include "MQTT.h"
 
-#define LOGGING
-
 #define MQTTQOS0_HEADER_MASK        (0 << 1)
 #define MQTTQOS1_HEADER_MASK        (1 << 1)
 #define MQTTQOS2_HEADER_MASK        (2 << 1)
@@ -9,360 +7,390 @@
 #define DUP_FLAG_OFF_MASK           (0 << 3)
 #define DUP_FLAG_ON_MASK            (1 << 3)
 
-MQTT::MQTT() {
-    this->ip = NULL;
+const uint8_t MQTT::S_CONN_3_1[] = {0x00,0x06,'M','Q','I','s','d','p', 0x03};
+const uint8_t MQTT::S_CONN_3_1_1[] = {0x00,0x04,'M','Q','T','T', 0x04};
+
+void MQTT::f_init(char* s_domain, uint8_t *a_ip, uint16_t n_port, int n_keepAlive, int n_maxPacketSize) {
+  if (a_ip != NULL)
+    this->a_ip = a_ip;
+  if (s_domain != NULL)
+    this->s_domain = s_domain;
+  this->n_port = n_port;
+  this->n_keepAlive = n_keepAlive;
+  // if n_maxPacketSize is over MQTT_MAX_PACKET_SIZE.
+  this->n_maxPacketSize = (n_maxPacketSize <= MQTT_MAX_PACKET_SIZE ? MQTT_MAX_PACKET_SIZE : n_maxPacketSize);
+  s_buffer = new uint8_t[this->n_maxPacketSize];
+  o_client = new TCPClient();
 }
 
-MQTT::MQTT(char* domain, uint16_t port, void (*callback)(char*,uint8_t*,unsigned int)) {
-    this->initialize(domain, NULL, port, MQTT_DEFAULT_KEEPALIVE, callback, MQTT_MAX_PACKET_SIZE);
+void MQTT::f_setBroker(char* s_domain, uint16_t n_port) {
+  if (f_isConnected())
+    f_disconnect();
+
+  this->s_domain = s_domain;
+  a_ip = NULL;
+  this->n_port = n_port;
 }
 
-MQTT::MQTT(char* domain, uint16_t port, void (*callback)(char*,uint8_t*,unsigned int), int maxpacketsize) {
-    this->initialize(domain, NULL, port, MQTT_DEFAULT_KEEPALIVE, callback, maxpacketsize);
+void MQTT::f_setBroker(uint8_t *a_ip, uint16_t n_port) {
+  if (f_isConnected())
+    f_disconnect();
+
+  this->s_domain = "";
+  this->a_ip = a_ip;
+  this->n_port = n_port;
 }
 
-MQTT::MQTT(uint8_t *ip, uint16_t port, void (*callback)(char*,uint8_t*,unsigned int)) {
-    this->initialize(NULL, ip, port, MQTT_DEFAULT_KEEPALIVE, callback, MQTT_MAX_PACKET_SIZE);
+bool MQTT::f_connect(const char *s_id) {
+  return f_connect(s_id, NULL, NULL, 0, QOS0, 0, 0, true);
 }
 
-MQTT::MQTT(uint8_t *ip, uint16_t port, void (*callback)(char*,uint8_t*,unsigned int), int maxpacketsize) {
-    this->initialize(NULL, ip, port, MQTT_DEFAULT_KEEPALIVE, callback, maxpacketsize);
+bool MQTT::f_connect(const char *s_id, const char *user, const char *pass) {
+  return f_connect(s_id, user, pass, 0, QOS0, 0, 0, true);
 }
 
-MQTT::MQTT(char* domain, uint16_t port, int keepalive, void (*callback)(char*,uint8_t*,unsigned int)) {
-    this->initialize(domain, NULL, port, keepalive, callback, MQTT_MAX_PACKET_SIZE);
+bool MQTT::f_connect(const char *s_id, const char *user, const char *pass, const char* willTopic, EMQTT_QOS willQos, uint8_t willRetain, const char* willMessage, bool cleanSession) {
+  if (f_isConnected() || n_state != STATE_IDLE || !f_timerTimeout())
+    return false;
+
+  int result = 0;
+  if (a_ip == NULL) {
+    Log.info("MQTT - connecting to %s:%d (version %u)", this->s_domain.c_str(), n_port, n_version);
+    result = o_client->connect(this->s_domain.c_str(), n_port);
+  }
+  else {
+    Log.info("MQTT - connecting to %d.%d.%d.%d:%d (version %u)", a_ip[0], a_ip[1], a_ip[2], a_ip[3], n_port, n_version);
+    result = o_client->connect(a_ip, n_port);
+  }
+
+  if (!result) {
+    Log.error("MQTT - connection failed");
+    n_state = STATE_REJECTED;
+    return false;
+  }
+
+  n_nextMsgId = 1;
+  const uint8_t* p_conn = MQTT::S_CONN_3_1;
+  if (n_version == MQTT_3_1_1)
+    p_conn = MQTT::S_CONN_3_1_1;
+  uint16_t n_conn = p_conn[1] + 3;
+
+  // Leave room in the buffer for header and variable length field
+  uint16_t length = 5;
+  for (uint8_t j = 0; j < n_conn; j++)
+    s_buffer[length++] = p_conn[j];
+
+  uint8_t v = willTopic
+    ? 0x06 | (willQos << 3) | (willRetain << 5)
+    : 0x02;
+
+  if (!cleanSession)
+    v = v & 0xfd;
+
+  if (user != NULL) {
+    v = v|0x80;
+    if (pass != NULL)
+      v = v|(0x80>>1);
+  }
+
+  s_buffer[length++] = v;
+  s_buffer[length++] = ((n_keepAlive) >> 8);
+  s_buffer[length++] = ((n_keepAlive) & 0xFF);
+  length = f_writeString(s_id, s_buffer, length);
+  if (willTopic) {
+    length = f_writeString(willTopic, s_buffer, length);
+    length = f_writeString(willMessage, s_buffer, length);
+  }
+
+  if (user != NULL) {
+    length = f_writeString(user,s_buffer,length);
+    if (pass != NULL)
+      length = f_writeString(pass,s_buffer,length);
+  }
+
+  f_write(MQTTCONNECT, s_buffer, length - 5);
+  f_timerReset(MQTT_RESPONSE_TIMEOUT);
+  n_state = STATE_CONNECTING;
+  return true;
 }
 
-MQTT::MQTT(char* domain, uint16_t port, int keepalive, void (*callback)(char*,uint8_t*,unsigned int), int maxpacketsize) {
-    this->initialize(domain, NULL, port, keepalive, callback, maxpacketsize);
-}
-
-MQTT::MQTT(uint8_t *ip, uint16_t port, int keepalive, void (*callback)(char*,uint8_t*,unsigned int)) {
-    this->initialize(NULL, ip, port, keepalive, callback, MQTT_MAX_PACKET_SIZE);
-}
-
-MQTT::MQTT(uint8_t *ip, uint16_t port, int keepalive, void (*callback)(char*,uint8_t*,unsigned int), int maxpacketsize) {
-    this->initialize(NULL, ip, port, keepalive, callback, maxpacketsize);
-}
-
-MQTT::~MQTT() {
-    if (isConnected()) {
-        disconnect();
-        free(buffer);
-    }
-}
-
-void MQTT::initialize(char* domain, uint8_t *ip, uint16_t port, int keepalive, void (*callback)(char*,uint8_t*,unsigned int), int maxpacketsize) {
-    this->callback = callback;
-    this->qoscallback = NULL;
-    if (ip != NULL)
-        this->ip = ip;
-    if (domain != NULL)
-        this->domain = domain;
-    this->port = port;
-    this->keepalive = keepalive;
-    // if maxpacketsize is over MQTT_MAX_PACKET_SIZE.
-    this->maxpacketsize = (maxpacketsize <= MQTT_MAX_PACKET_SIZE ? MQTT_MAX_PACKET_SIZE : maxpacketsize);
-    buffer = new uint8_t[this->maxpacketsize];
-    this->_client = new TCPClient();
-}
-
-void MQTT::setBroker(char* domain, uint16_t port) {
-    if(isConnected()) {
-        disconnect();
-    }
-    this->domain = domain;
-    this->ip = NULL;
-    this->port = port;
-}
-
-void MQTT::setBroker(uint8_t *ip, uint16_t port) {
-    if(isConnected()) {
-        disconnect();
-    }
-    this->domain = "";
-    this->ip = ip;
-    this->port = port;
-}
-
-void MQTT::addQosCallback(void (*qoscallback)(unsigned int)) {
-    this->qoscallback = qoscallback;
-}
-
-bool MQTT::connect(const char *id) {
-    return connect(id, NULL, NULL, 0, QOS0, 0, 0, true);
-}
-
-bool MQTT::connect(const char *id, const char *user, const char *pass) {
-    return connect(id, user, pass, 0, QOS0, 0, 0, true);
-}
-
-bool MQTT::connect(const char *id, const char *user, const char *pass, const char* willTopic, EMQTT_QOS willQos, uint8_t willRetain, const char* willMessage, bool cleanSession) {
-    if (!isConnected()) {
-        int result = 0;
-        if (ip == NULL) {
-          Log.info("MQTT - connecting to %s:%d", this->domain.c_str(), this->port);
-          result = _client->connect(this->domain.c_str(), this->port);
-        }
-        else {
-          Log.info("MQTT - connecting to %d.%d.%d.%d:%d", this->ip[0], this->ip[1], this->ip[2], this->ip[3], this->port);
-          result = _client->connect(this->ip, this->port);
-        }
-
-        if (result) {
-            nextMsgId = 1;
-            uint8_t d[9] = {0x00, 0x06, 'M', 'Q', 'I', 's', 'd', 'p', MQTTPROTOCOLVERSION};
-            // Leave room in the buffer for header and variable length field
-            uint16_t length = 5;
-            unsigned int j;
-            for (j = 0; j < 9; j++) {
-                buffer[length++] = d[j];
-            }
-
-            uint8_t v;
-            if (willTopic) {
-                v = 0x06|(willQos<<3)|(willRetain<<5);
-            }
-            else {
-                v = 0x02;
-            }
-
-            if (!cleanSession) {
-              v = v&0xfd;
-            }
-
-            if (user != NULL) {
-                v = v|0x80;
-
-                if (pass != NULL) {
-                    v = v|(0x80>>1);
-                }
-            }
-
-            buffer[length++] = v;
-
-            buffer[length++] = ((this->keepalive) >> 8);
-            buffer[length++] = ((this->keepalive) & 0xFF);
-            length = writeString(id, buffer, length);
-            if (willTopic) {
-                length = writeString(willTopic, buffer, length);
-                length = writeString(willMessage, buffer, length);
-            }
-
-            if (user != NULL) {
-                length = writeString(user,buffer,length);
-                if (pass != NULL) {
-                    length = writeString(pass,buffer,length);
-                }
-            }
-
-            write(MQTTCONNECT, buffer, length - 5);
-            lastInActivity = lastOutActivity = millis();
-
-            while (!_client->available()) {
-                unsigned long t = millis();
-                if (t - lastInActivity > this->keepalive * 1000UL) {
-                    _client->stop();
-                    return false;
-                }
-            }
-            uint8_t llen;
-            uint16_t len = readPacket(&llen);
-
-            if (len == 4) {
-                if (buffer[3] == CONN_ACCEPT) {
-                    lastInActivity = millis();
-                    pingOutstanding = false;
-                    Log.info("MQTT - connect success");
-                    return true;
-                }
-                else {
-                    // check EMQTT_CONNACK_RESPONSE code.
-                    Log.warn("MQTT - connect fail. code = [%d]", buffer[3]);
-                }
-            }
-        }
-        _client->stop();
+bool MQTT::f_onConnecting() {
+  if (!o_client->available()) {
+    if (f_timerTimeout()) {
+      Log.error("MQTT - connection timeout");
+      n_state = STATE_TIMEOUT;
+      f_rotateProtocol();
     }
     return false;
-}
+  }
 
-uint8_t MQTT::readByte() {
-    while(!_client->available()) {}
-    return _client->read();
-}
+  uint8_t llen;
+  uint16_t len = f_readPacket(&llen);
 
-uint16_t MQTT::readPacket(uint8_t* lengthLength) {
-    uint16_t len = 0;
-    buffer[len++] = readByte();
-    bool isPublish = (buffer[0] & 0xF0) == MQTTPUBLISH;
-    uint32_t multiplier = 1;
-    uint16_t length = 0;
-    uint8_t digit = 0;
-    uint16_t skip = 0;
-    uint8_t start = 0;
-
-    do {
-        digit = readByte();
-        buffer[len++] = digit;
-        length += (digit & 127) * multiplier;
-        multiplier *= 128;
+  if (len == 4) {
+    if (s_buffer[3] == CONN_ACCEPT) {
+      Log.info("MQTT - connect success");
+      n_state = STATE_CONNECTED;
+      f_timerReset(n_keepAlive);
     }
-    while ((digit & 128) != 0);
-    *lengthLength = len - 1;
-
-    if (isPublish) {
-        // Read in topic length to calculate bytes to skip over for Stream writing
-        buffer[len++] = readByte();
-        buffer[len++] = readByte();
-        skip = (buffer[*lengthLength + 1] << 8) + buffer[*lengthLength + 2];
-        start = 2;
-        if (buffer[0] & MQTTQOS1_HEADER_MASK) {
-            // skip message id
-            skip += 2;
-        }
+    else {
+      Log.error("MQTT - connect fail. code = [%d]", s_buffer[3]);
+      if (s_buffer[3] == CONN_UNACCEPTABLE_PROCOTOL) {
+        n_state = STATE_RETRY;
+        f_rotateProtocol();
+      }
     }
+    f_onConnectHanlder(s_buffer[3]);
+    return (s_buffer[3] == CONN_ACCEPT);
+  }
 
-    for (uint16_t i = start;i<length;i++) {
-        digit = readByte();
-        if (len < this->maxpacketsize) {
-            buffer[len] = digit;
-        }
-        len++;
+  Log.error("MQTT - invalid response");
+  n_state = STATE_REJECTED;
+  return false;
+}
+
+void MQTT::f_onConnected() {
+  if (f_timerTimeout())
+    f_ping();
+}
+
+void MQTT::f_ping() {
+  s_buffer[0] = MQTTPINGREQ;
+  s_buffer[1] = 0;
+  o_client->write(s_buffer, 2);
+  n_state = STATE_PINGING;
+  f_timerReset(MQTT_RESPONSE_TIMEOUT);
+  Log.info("MQTT - pinging broker");
+}
+
+bool MQTT::f_onPinging() {
+  if (!f_timerTimeout())
+    return true;
+  Log.warn("MQTT - no response to ping");
+  n_state = STATE_TIMEOUT;
+  return false;
+}
+
+bool MQTT::f_timerTimeout() {
+  return (millis() > n_timeout);
+}
+
+void MQTT::f_timerReset(uint8_t n_time) {
+  n_timeout = millis() + n_time * 1000UL;
+}
+
+void MQTT::f_rotateProtocol() {
+  switch(n_version) {
+    case MQTT_3_1:
+      n_version = MQTT_3_1_1;
+      break;
+    case MQTT_3_1_1:
+      n_version = MQTT_3_1;
+      break;
+  }
+}
+
+uint8_t MQTT::f_readByte() {
+    while (!o_client->available()) {
+      // @todo: non-breaking
     }
-
-    if (len > this->maxpacketsize) {
-        len = 0; // This will cause the packet to be ignored.
-    }
-
-    return len;
+    return o_client->read();
 }
 
-bool MQTT::loop() {
-    if (isConnected()) {
-        unsigned long t = millis();
-        if ((t - lastInActivity > this->keepalive * 1000UL) || (t - lastOutActivity > this->keepalive * 1000UL)) {
-            if (pingOutstanding) {
-                _client->stop();
-                return false;
-            } else {
-                buffer[0] = MQTTPINGREQ;
-                buffer[1] = 0;
-                _client->write(buffer, 2);
-                lastOutActivity = t;
-                lastInActivity = t;
-                pingOutstanding = true;
-            }
-        }
-        if (_client->available()) {
-            uint8_t llen;
-            uint16_t len = readPacket(&llen);
-            uint16_t msgId = 0;
-            uint8_t *payload;
-            if (len > 0) {
-                lastInActivity = t;
-                uint8_t type = buffer[0] & 0xF0;
-                if (type == MQTTPUBLISH) {
-                    if (callback) {
-                        uint16_t tl = (buffer[llen + 1] << 8) + buffer[llen + 2];
-                        char topic[tl + 1];
-                        for (uint16_t i = 0; i < tl; i++) {
-                            topic[i] = buffer[llen + 3 + i];
-                        }
-                        topic[tl] = 0;
-                        // msgId only present for QOS>0
-                        if ((buffer[0] & 0x06) == MQTTQOS1_HEADER_MASK) {
-                            msgId = (buffer[llen + 3 + tl] << 8) + buffer[llen + 3 + tl + 1];
-                            payload = buffer + llen + 3 + tl + 2;
-                            callback(topic, payload, len - llen - 3 - tl - 2);
+uint16_t MQTT::f_receive() {
+  if (!o_client->available())
+    return 0;
 
-                            buffer[0] = MQTTPUBACK;
-                            buffer[1] = 2;
-                            buffer[2] = (msgId >> 8);
-                            buffer[3] = (msgId & 0xFF);
-                            _client->write(buffer, 4);
-                            lastOutActivity = t;
-                        } else {
-                            payload = buffer + llen + 3 + tl;
-                            callback(topic, payload, len - llen - 3 - tl);
-                        }
-                    }
-                } else if (type == MQTTPUBACK || type == MQTTPUBREC) {
-                    if (qoscallback) {
-                        // msgId only present for QOS==0
-                        if (len == 4 && (buffer[0] & 0x06) == MQTTQOS0_HEADER_MASK) {
-                            msgId = (buffer[2] << 8) + buffer[3];
-                            this->qoscallback(msgId);
-                        }
-                    }
-                } else if (type == MQTTPUBCOMP) {
-                    // TODO:if something...
-                } else if (type == MQTTSUBACK) {
-                    // if something...
-                } else if (type == MQTTPINGREQ) {
-                    buffer[0] = MQTTPINGRESP;
-                    buffer[1] = 0;
-                    _client->write(buffer, 2);
-                } else if (type == MQTTPINGRESP) {
-                    pingOutstanding = false;
-                }
-            }
-        }
-        return true;
-    }
-    return false;
+  uint8_t n_llen;
+  uint16_t n_len = f_readPacket(&n_llen);
+  if (!n_len)
+    return 0;
+
+  f_timerReset(n_keepAlive);
+  n_state = STATE_CONNECTED;
+
+  uint8_t n_type = s_buffer[0] & 0xF0;
+  Log.info("MQTT - incomming message %u", n_type);
+  switch (n_type) {
+    case MQTTPUBLISH:
+      return f_onPublish(n_len, n_llen);
+
+    case MQTTPUBCOMP:
+    case MQTTSUBACK:
+      // @todo
+      return 1;
+
+    case MQTTPINGREQ:
+      f_pingResponse();
+      return 1;
+
+    case MQTTPINGRESP:
+      n_state = STATE_CONNECTED;
+      return 1;
+
+    default:
+      Log.warn("MQTT - unknown message type %u", n_type);
+  }
+  return 0;
 }
 
-bool MQTT::publish(const char* topic, const char* payload) {
-    return publish(topic, (uint8_t*)payload, strlen(payload), false, QOS0, NULL);
+uint16_t MQTT::f_onPublish(uint16_t n_len, uint8_t n_llen) {
+  uint16_t msgId = 0;
+  uint8_t *a_payload;
+
+  uint16_t tl = (s_buffer[n_llen + 1] << 8) + s_buffer[n_llen + 2];
+  char s_topic[tl + 1];
+  for (uint16_t i = 0; i < tl; i++)
+    s_topic[i] = s_buffer[n_llen + 3 + i];
+  s_topic[tl] = 0;
+  // msgId only present for QOS>0
+  if ((s_buffer[0] & 0x06) == MQTTQOS1_HEADER_MASK) {
+    msgId = (s_buffer[n_llen + 3 + tl] << 8) + s_buffer[n_llen + 3 + tl + 1];
+    a_payload = s_buffer + n_llen + 3 + tl + 2;
+    f_onReceiveHandler(s_topic, a_payload, n_len - n_llen - 3 - tl - 2);
+
+    s_buffer[0] = MQTTPUBACK;
+    s_buffer[1] = 2;
+    s_buffer[2] = (msgId >> 8);
+    s_buffer[3] = (msgId & 0xFF);
+    o_client->write(s_buffer, 4);
+  }
+  else {
+    a_payload = s_buffer + n_llen + 3 + tl;
+    f_onReceiveHandler(s_topic, a_payload, n_len - n_llen - 3 - tl);
+  }
+  return n_len;
 }
 
-bool MQTT::publish(const char * topic, const char* payload, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
-    return publish(topic, (uint8_t*)payload, strlen(payload), false, qos, dup, messageid);
+void MQTT::f_pingResponse() {
+  s_buffer[0] = MQTTPINGRESP;
+  s_buffer[1] = 0;
+  o_client->write(s_buffer, 2);
+  Log.info("MQTT - responded to incoming ping");
 }
 
-bool MQTT::publish(const char * topic, const char* payload, EMQTT_QOS qos, uint16_t *messageid) {
-    return publish(topic, (uint8_t*)payload, strlen(payload), false, qos, messageid);
+uint16_t MQTT::f_readPacket(uint8_t* lengthLength) {
+  uint16_t len = 0;
+  s_buffer[len++] = f_readByte();
+  bool isPublish = (s_buffer[0] & 0xF0) == MQTTPUBLISH;
+  uint32_t multiplier = 1;
+  uint16_t length = 0;
+  uint8_t digit = 0;
+  uint16_t skip = 0;
+  uint8_t start = 0;
+
+  do {
+    digit = f_readByte();
+    s_buffer[len++] = digit;
+    length += (digit & 127) * multiplier;
+    multiplier *= 128;
+  }
+  while ((digit & 128) != 0);
+  *lengthLength = len - 1;
+
+  if (isPublish) {
+    // Read in topic length to calculate bytes to skip over for Stream writing
+    s_buffer[len++] = f_readByte();
+    s_buffer[len++] = f_readByte();
+    skip = (s_buffer[*lengthLength + 1] << 8) + s_buffer[*lengthLength + 2];
+    start = 2;
+    if (s_buffer[0] & MQTTQOS1_HEADER_MASK)
+      // skip message id
+      skip += 2;
+  }
+
+  for (uint16_t i = start;i<length;i++) {
+    digit = f_readByte();
+    if (len < this->n_maxPacketSize)
+        s_buffer[len] = digit;
+    len++;
+  }
+
+  if (len > this->n_maxPacketSize)
+    len = 0; // This will cause the packet to be ignored.
+
+  return len;
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength) {
-    return publish(topic, payload, plength, false, QOS0, NULL);
+bool MQTT::f_process() {
+  switch (n_state) {
+    case STATE_CONNECTED:
+      f_onConnected();
+      f_receive();
+      break;
+
+    case STATE_CONNECTING:
+      f_onConnecting();
+      break;
+
+    case STATE_PINGING:
+      f_receive();
+      f_onPinging();
+      break;
+
+    case STATE_REJECTED:
+    case STATE_TIMEOUT:
+    case STATE_RETRY:
+
+      f_clear();
+      break;
+
+    case STATE_IDLE:
+      break;
+  }
+  return true;
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
-    return publish(topic, payload, plength, false, qos, dup, messageid);
+bool MQTT::f_publish(const char* s_topic, const char* s_payload) {
+  return f_publish(s_topic, (uint8_t*)s_payload, strlen(s_payload), false, QOS0, NULL);
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength, EMQTT_QOS qos, uint16_t *messageid) {
-    return publish(topic, payload, plength, false, qos, messageid);
+bool MQTT::f_publish(const char * s_topic, const char* s_payload, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
+  return f_publish(s_topic, (uint8_t*)s_payload, strlen(s_payload), false, qos, dup, messageid);
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength, bool retain) {
-    return publish(topic, payload, plength, retain, QOS0, NULL);
+bool MQTT::f_publish(const char * s_topic, const char* s_payload, EMQTT_QOS qos, uint16_t *messageid) {
+  return f_publish(s_topic, (uint8_t*)s_payload, strlen(s_payload), false, qos, messageid);
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength, bool retain, EMQTT_QOS qos, uint16_t *messageid) {
-    return publish(topic, payload, plength, retain, qos, false, messageid);
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength) {
+  return f_publish(s_topic, a_payload, plength, false, QOS0, NULL);
 }
 
-bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int plength, bool retain, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
-    if (isConnected()) {
-        // Leave room in the buffer for header and variable length field
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
+  return f_publish(s_topic, a_payload, plength, false, qos, dup, messageid);
+}
+
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, EMQTT_QOS qos, uint16_t *messageid) {
+  return f_publish(s_topic, a_payload, plength, false, qos, messageid);
+}
+
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, bool retain) {
+  return f_publish(s_topic, a_payload, plength, retain, QOS0, NULL);
+}
+
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, bool retain, EMQTT_QOS qos, uint16_t *messageid) {
+  return f_publish(s_topic, a_payload, plength, retain, qos, false, messageid);
+}
+
+bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, bool retain, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
+    if (f_isConnected()) {
+        // Leave room in the s_buffer for header and variable length field
         uint16_t length = 5;
-        memset(buffer, 0, this->maxpacketsize);
+        memset(s_buffer, 0, this->n_maxPacketSize);
 
-        length = writeString(topic, buffer, length);
+        length = f_writeString(s_topic, s_buffer, length);
 
         if (qos == QOS2 || qos == QOS1) {
-            nextMsgId += 1;
-            buffer[length++] = (nextMsgId >> 8);
-            buffer[length++] = (nextMsgId & 0xFF);
+            n_nextMsgId += 1;
+            s_buffer[length++] = (n_nextMsgId >> 8);
+            s_buffer[length++] = (n_nextMsgId & 0xFF);
             if (messageid != NULL)
-                *messageid = nextMsgId++;
+                *messageid = n_nextMsgId++;
         }
 
-        for (uint16_t i = 0; i < plength && length < this->maxpacketsize; i++) {
-            buffer[length++] = payload[i];
+        for (uint16_t i = 0; i < plength && length < this->n_maxPacketSize; i++) {
+            s_buffer[length++] = a_payload[i];
         }
 
         uint8_t header = MQTTPUBLISH;
@@ -381,119 +409,111 @@ bool MQTT::publish(const char* topic, const uint8_t* payload, unsigned int pleng
         else
             header |= MQTTQOS0_HEADER_MASK;
 
-        return write(header, buffer, length - 5);
+        return f_write(header, s_buffer, length - 5);
     }
     return false;
 }
 
-bool MQTT::publishRelease(uint16_t messageid) {
-    if (isConnected()) {
-        uint16_t length = 0;
-        buffer[length++] = MQTTPUBREL | MQTTQOS1_HEADER_MASK;
-        buffer[length++] = 2;
-        buffer[length++] = (messageid >> 8);
-        buffer[length++] = (messageid & 0xFF);
-        return _client->write(buffer, length);
-    }
+bool MQTT::f_publishRelease(uint16_t n_messageId) {
+  if (!f_isConnected())
     return false;
+  uint16_t n_length = 0;
+  s_buffer[n_length++] = MQTTPUBREL | MQTTQOS1_HEADER_MASK;
+  s_buffer[n_length++] = 2;
+  s_buffer[n_length++] = (n_messageId >> 8);
+  s_buffer[n_length++] = (n_messageId & 0xFF);
+  return o_client->write(s_buffer, n_length);
 }
 
-
-bool MQTT::write(uint8_t header, uint8_t* buf, uint16_t length) {
-    uint8_t lenBuf[4];
-    uint8_t llen = 0;
-    uint8_t digit;
-    uint8_t pos = 0;
-    uint16_t rc;
-    uint16_t len = length;
-    do {
-        digit = len % 128;
-        len = len / 128;
-        if (len > 0) {
-            digit |= 0x80;
-        }
-        lenBuf[pos++] = digit;
-        llen++;
-    } while (len > 0);
-
-    buf[4-llen] = header;
-    for (int i = 0; i < llen; i++) {
-        buf[5 - llen + i] = lenBuf[i];
+bool MQTT::f_write(uint8_t header, uint8_t* buf, uint16_t length) {
+  uint8_t lenBuf[4];
+  uint8_t llen = 0;
+  uint8_t digit;
+  uint8_t pos = 0;
+  uint16_t rc;
+  uint16_t len = length;
+  do {
+    digit = len % 128;
+    len = len / 128;
+    if (len > 0) {
+        digit |= 0x80;
     }
-    rc = _client->write(buf + (4 - llen), length + 1 + llen);
+    lenBuf[pos++] = digit;
+    llen++;
+  }
+  while (len > 0);
 
-    lastOutActivity = millis();
-    return (rc == 1 + llen + length);
+  buf[4-llen] = header;
+  for (int i = 0; i < llen; i++)
+    buf[5 - llen + i] = lenBuf[i];
+
+  rc = o_client->write(buf + (4 - llen), length + 1 + llen);
+  return (rc == 1 + llen + length);
 }
 
-bool MQTT::subscribe(const char* topic) {
-    return subscribe(topic, QOS0);
+bool MQTT::f_subscribe(const char* s_topic) {
+  return f_subscribe(s_topic, QOS0);
 }
 
-bool MQTT::subscribe(const char* topic, EMQTT_QOS qos) {
-    if (qos < 0 || qos > 1)
-        return false;
-
-    if (isConnected()) {
-        // Leave room in the buffer for header and variable length field
-        uint16_t length = 5;
-        nextMsgId++;
-        if (nextMsgId == 0) {
-            nextMsgId = 1;
-        }
-        buffer[length++] = (nextMsgId >> 8);
-        buffer[length++] = (nextMsgId & 0xFF);
-        length = writeString(topic, buffer, length);
-        buffer[length++] = qos;
-        return write(MQTTSUBSCRIBE | MQTTQOS1_HEADER_MASK, buffer, length - 5);
-    }
+bool MQTT::f_subscribe(const char* s_topic, EMQTT_QOS n_qos) {
+  if (!f_isConnected() || n_qos < 0 || n_qos > 1)
     return false;
+
+  // Leave room in the buffer for header and variable length field
+  uint16_t n_length = 5;
+  n_nextMsgId++;
+  if (n_nextMsgId == 0)
+    n_nextMsgId = 1;
+  s_buffer[n_length++] = (n_nextMsgId >> 8);
+  s_buffer[n_length++] = (n_nextMsgId & 0xFF);
+
+  n_length = f_writeString(s_topic, s_buffer, n_length);
+  s_buffer[n_length++] = n_qos;
+  return f_write(MQTTSUBSCRIBE | MQTTQOS1_HEADER_MASK, s_buffer, n_length - 5);
 }
 
-bool MQTT::unsubscribe(const char* topic) {
-    if (isConnected()) {
-        uint16_t length = 5;
-        nextMsgId++;
-        if (nextMsgId == 0) {
-            nextMsgId = 1;
-        }
-        buffer[length++] = (nextMsgId >> 8);
-        buffer[length++] = (nextMsgId & 0xFF);
-        length = writeString(topic, buffer,length);
-        return write(MQTTUNSUBSCRIBE | MQTTQOS1_HEADER_MASK, buffer, length - 5);
-    }
-    return false;
+bool MQTT::f_unsubscribe(const char* s_topic) {
+  if (f_isConnected()) {
+    uint16_t n_length = 5;
+    n_nextMsgId++;
+    if (n_nextMsgId == 0)
+        n_nextMsgId = 1;
+    s_buffer[n_length++] = (n_nextMsgId >> 8);
+    s_buffer[n_length++] = (n_nextMsgId & 0xFF);
+    n_length = f_writeString(s_topic, s_buffer, n_length);
+    return f_write(MQTTUNSUBSCRIBE | MQTTQOS1_HEADER_MASK, s_buffer, n_length - 5);
+  }
+  return false;
 }
 
-void MQTT::disconnect() {
-    buffer[0] = MQTTDISCONNECT;
-    buffer[1] = 0;
-    _client->write(buffer, 2);
-    _client->stop();
-    lastInActivity = lastOutActivity = millis();
+void MQTT::f_disconnect() {
+  if (!f_isConnected())
+    return;
+  s_buffer[0] = MQTTDISCONNECT;
+  s_buffer[1] = 0;
+  o_client->write(s_buffer, 2);
+  f_clear();
 }
 
-uint16_t MQTT::writeString(const char* string, uint8_t* buf, uint16_t pos) {
-    const char* idp = string;
-    uint16_t i = 0;
-    pos += 2;
-    while (*idp && pos < this->maxpacketsize) {
-        buf[pos++] = *idp++;
-        i++;
-    }
-    buf[pos - i - 2] = (i >> 8);
-    buf[pos - i - 1] = (i & 0xFF);
-    return pos;
+void MQTT::f_clear() {
+  o_client->stop();
+  f_timerReset(MQTT_RECONNECT_TIMEOUT);
+  n_state = STATE_IDLE;
 }
 
-
-bool MQTT::isConnected() {
-    bool rc = (int)_client->connected();
-    if (!rc) _client->stop();
-    return rc;
+uint16_t MQTT::f_writeString(const char* string, uint8_t* buf, uint16_t pos) {
+  const char* idp = string;
+  uint16_t i = 0;
+  pos += 2;
+  while (*idp && pos < this->n_maxPacketSize) {
+    buf[pos++] = *idp++;
+    i++;
+  }
+  buf[pos - i - 2] = (i >> 8);
+  buf[pos - i - 1] = (i & 0xFF);
+  return pos;
 }
 
-void MQTT::clear() {
-  _client->stop();
-  lastInActivity = lastOutActivity = millis();
+bool MQTT::f_isConnected() {
+  return o_client && o_client->connected();
 }

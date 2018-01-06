@@ -3,7 +3,7 @@
  * @file node-particle.cpp
  * @brief Implements Particle cloud interface
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
@@ -12,14 +12,14 @@
 bool c_particle::f_init() {
 
   b_enabled = f_getConfig().a_config.n_protocols & 0b01;
-
   if (!b_enabled) {
-    Log.info("Cloud - disabled");
     if (Particle.connected())
       Particle.disconnect();
+    Log.info("Cloud - disabled");
     return FALSE;
   }
   Log.info("Cloud - enabled");
+  b_boot = TRUE;
   b_init = TRUE;
   return TRUE;
 }
@@ -48,8 +48,8 @@ void c_particle::f_declare() {
     Particle.variable("doorStatus", s_doorStatus, STRING);
     Particle.variable("doorConfig", s_doorConfig, STRING);
     Particle.variable("netConfig", s_netConfig, STRING);
-    Particle.subscribe("spark/", &c_particle::f_handleEvent, this);
-    Particle.publish("spark/device/name");
+    Particle.subscribe("spark/", &c_particle::f_handleEvent, this, MY_DEVICES);
+    Particle.publish("spark/device/name", PRIVATE);
     b_boot = FALSE;
     Log.info("Cloud - ready");
   }
@@ -60,13 +60,12 @@ void c_particle::f_process() {
   if (!b_enabled)
     return;
 
-  Particle.process();
   if (!Particle.connected()) {
     Particle.connect();
     return;
   }
-
   f_declare();
+  Particle.process();
 
   if (!o_updateTimer.f_isRunning()) {
     // update particle variables
@@ -173,7 +172,7 @@ void c_particle::f_updateDoorStatus() {
     s_time,
     o_config.a_state.n_sensorReflection,
     o_config.a_state.n_sensorBase,
-    WiFi.RSSI()
+    (int)WiFi.RSSI()
   );
 }
 

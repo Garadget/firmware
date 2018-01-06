@@ -36,7 +36,7 @@ a:visited {
   margin: 0 auto;
   padding: 10px 15px;
 }
-.header img {
+.header object {
   height: 50px;
   float: left;
 }
@@ -148,7 +148,7 @@ h2 {
 .ia {
   position: relative;
 }
-.ia img,
+.ia object,
 .ab {
   position: absolute;
   cursor: pointer;

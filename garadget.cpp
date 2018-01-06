@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garadget main file
- * @version 1.18
+ * @version 1.19
  * @author Denis Grisak
  * @license GPL v3
 
@@ -25,6 +25,7 @@
 #endif
 
 SYSTEM_MODE(MANUAL);
+// SYSTEM_THREAD(ENABLED);
 STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
 
 // Photon module - antenna preference
@@ -39,7 +40,7 @@ STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
     }
   );
 #endif
-
+c_config& o_config = c_config::f_getInstance();
 c_sensor& o_sensor = c_sensor::f_getInstance();
 c_relay o_relay = c_relay();
 c_particle o_cloud = c_particle();
@@ -54,7 +55,7 @@ void setup() {
   // wait 3 seconds for "M" button in debug mode to start serial interface
   while (!System.buttonPushed() && millis() < 3000);
 #endif
-c_config::f_getInstance().f_init();
+o_config.f_init();
 o_sensor.f_init();
 o_relay.f_init();
 #ifdef TESTPORT
@@ -67,6 +68,7 @@ o_relay.f_init();
 }
 
 void loop() {
+  o_config.f_process();
   o_cloud.f_process();
   o_mqtt.f_process();
   o_relay.f_process();
@@ -75,10 +77,10 @@ void loop() {
 }
 
 bool f_handle(const c_message& a_message) {
-  o_cloud.f_receive(a_message);
-  o_mqtt.f_receive(a_message);
   o_relay.f_receive(a_message);
   o_sensor.f_receive(a_message);
   o_alert.f_receive(a_message);
+  o_cloud.f_receive(a_message);
+  o_mqtt.f_receive(a_message);
   return TRUE;
 }

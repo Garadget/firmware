@@ -3,7 +3,7 @@
  * @file node-sensor.cpp
  * @brief Implements laser sensor
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
@@ -86,7 +86,7 @@ uint16_t c_sensor::f_getBase() {
  */
 c_doorStatus c_sensor::f_getState() {
 
-  #if APPVIRTUAL
+  #ifdef APPVIRTUAL
     return *n_status == STATUS_CLOSED
       ? STATUS_CLOSED
       : STATUS_OPEN;
@@ -114,7 +114,7 @@ void c_sensor::f_onMotionEnd() {
       break;
 
     case STATUS_CLOSING:
-      #if APPVIRTUAL
+      #ifdef APPVIRTUAL
         f_onChange(STATUS_CLOSED);
       #else
         if (f_getState() != STATUS_CLOSED)

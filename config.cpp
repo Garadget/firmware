@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.18
+* @version 1.19
 */
 // $Log$
 
@@ -37,7 +37,7 @@ bool c_config::f_init() {
     }
     a_config.n_versionMajor = VERSION_MAJOR;
     a_config.n_versionMinor = VERSION_MINOR;
-    f_save("upgrade");
+    f_save();
   }
   o_timezones.f_setConfig(String(a_config.s_timeZone));
   return TRUE;
@@ -68,14 +68,21 @@ int8_t c_config::f_validate() {
 /**
 * Saves updated configuration variables to EEPROM
 */
-void c_config::f_save(const char* s_message) {
+void c_config::f_save() {
+  EEPROM.put(0, a_config);
+  b_updated = true;
+}
+
+void c_config::f_process() {
+  if (!b_updated)
+    return;
   c_message a_message = {
     "config",
     MSG_CONFIG,
-    s_message
+    NULL
   };
   f_handle(a_message);
-  EEPROM.put(0, a_config);
+  b_updated = false;
 }
 
 /**
@@ -128,7 +135,7 @@ int8_t c_config::f_parse(String s_newConfig) {
 
   if (n_updates) {
     Log.info("config - parameters updated: %u", n_updates);
-    f_save(s_newConfig.c_str());
+    f_save();
   }
   return n_updates;
 }
@@ -342,6 +349,20 @@ void c_config::f_getJsonConfig(char* s_buffer) {
     a_config.n_mqttBrokerPort,
     c_config::f_escapeJson(String(a_config.s_mqttBrokerUser)).c_str(),
     a_config.n_mqttTimeout
+  );
+}
+
+void c_config::f_getJsonStatus(char* s_buffer) {
+  char s_time[10];
+  f_timeInStatus(s_time);
+  sprintf(
+    s_buffer,
+    "{\"status\":\"%s\",\"time\":\"%s\",\"sensor\":%u,\"bright\":%u,\"signal\":%d}",
+    c_config::f_statusString(a_state.n_doorStatus),
+    s_time,
+    a_state.n_sensorReflection,
+    99 - a_state.n_sensorBase * 100 / 4096,
+    (int)WiFi.RSSI()
   );
 }
 

@@ -3,7 +3,7 @@
  * @file node-alert.cpp
  * @brief Implements alerts functionality
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
@@ -121,7 +121,7 @@ void c_alert::f_handleStatus() {
     case STATUS_OPEN:
     case STATUS_STOPPED:
       if (*n_timeout && !o_timeout.f_isRunning()) {
-        o_timeout.f_setDuration(*n_timeout * 1000 * 60);
+        o_timeout.f_setDuration(*n_timeout * 1000);
         o_timeout.f_start();
         n_timeOpened = millis();
       }

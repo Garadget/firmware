@@ -10,7 +10,7 @@
   <div class="header">
     <div class="lh">
       <div class="header-content wl">
-        <img src="logo.svg" />
+        <object data="logo.svg" type="image/svg+xml"></object>
         <h1 id="title">Setup</h1>
       </div>
     </div>
@@ -27,7 +27,7 @@
         <label>ID:</label>
         <div class="ia">
           <input type="text" name="id" value="" disabled />
-          <img src="copy.svg" />
+          <object data="copy.svg" type="image/svg+xml"></object>
           <div title="Copy Device ID" class="ab" onclick="f_copyId()"></div>
         </div>
       </div>
@@ -49,7 +49,7 @@
           <ul class="rg" id="aplist">
             <li>Loading...</li>
           </ul>
-          <img src="refresh.svg" />
+          <object data="refresh.svg" type="image/svg+xml"></object>
           <div title="Rescan WiFi" class="ab" onclick="f_apScan()"></div>
         </div>
       </div>
@@ -71,7 +71,7 @@
         <label>Password:</label>
         <div class="ia">
           <input type="password" name="pass" id="ap-pass" value="" />
-          <img src="show.svg" />
+          <object data="show.svg" type="image/svg+xml"></object>
           <div title="Toggle Visibility" class="ab" onclick="f_togglePass('ap-pass')"></div>
         </div>
       </div>
@@ -99,7 +99,7 @@
         <div class="fr">
           <label>Device Topic ID:</label>
           <input type="text" name="nme" value="door" />
-          <div class="rn">Name uniquely identifying the device in MQTT topics e.g. /garadget/TOPIC_ID/open</div>
+          <div class="rn">Name uniquely identifying the device in MQTT topics e.g. /garadget/<b>TOPIC_ID</b>/status</div>
         </div>
         <div class="fr">
           <label>Login:</label>
@@ -110,7 +110,7 @@
           <label>Password:</label>
           <div class="ia">
             <input type="password" name="mqpw" id="mqtt-pass" value="" />
-            <img src="show.svg" />
+            <object data="show.svg" type="image/svg+xml"></object>
             <div title="Toggle Visibility" class="ab" onclick="f_togglePass('mqtt-pass')"></div>
           </div>
           <div class="rn">Optional, MQTT password</div>

@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 18
+#define VERSION_MINOR 19
 #define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset

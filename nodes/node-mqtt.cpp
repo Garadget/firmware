@@ -3,33 +3,71 @@
  * @file node-mqtt.cpp
  * @brief Implements MQTT client
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
 #include "node-mqtt.h"
 
-MQTT* c_mqtt::o_client = NULL;
+void c_mqtt::f_onConnectHanlder(uint8_t n_result) {
+  if (n_result != CONN_ACCEPT)
+    return;
 
-void c_mqtt::f_callback(char* s_topic, byte* s_payload, unsigned int n_length) {
+  // (re)subscribe to topics
+  const char* s_topicId = f_getClientId();
+  char s_topic[sizeof("garadget//command") + MAXNAMESIZE];
+
+  sprintf(
+    s_topic,
+    "garadget/%s/command",
+    s_topicId
+  );
+  MQTT::f_subscribe(s_topic, QOS0);
+  Log.info("MQTT - subscribed to topic: %s", s_topic);
+
+  sprintf(
+    s_topic,
+    "garadget/%s/config",
+    s_topicId
+  );
+  MQTT::f_subscribe(s_topic, QOS0);
+  Log.info("MQTT - subscribed to topic: %s", s_topic);
+  f_publishStatus();
+  f_publishConfig();
+  Log.info("MQTT - ready");
+}
+
+void c_mqtt::f_onReceiveHandler(char* s_topic, uint8_t* s_payload, unsigned int n_length) {
+  String s_topicString = String(s_topic);
   s_payload[n_length] = '\0';
+
   Log.info("MQTT - topic: %s, payload: %s", s_topic, s_payload);
-  if (String(s_topic).endsWith("/command")) {
-    c_doorStatus n_status = c_config::f_statusEnum((char*)s_payload);
-    if (n_status == STATUS_UNKNOWN) {
-      Log.error("MQTT - unknown command: %s", s_payload);
-      return;
+  if (s_topicString.endsWith("/command")) {
+    if (!strcmp((char*)s_payload, "get-status"))
+      f_publishStatus();
+    else if (!strcmp((char*)s_payload, "get-config"))
+      f_publishConfig();
+    else {
+      c_doorStatus n_status = c_config::f_statusEnum((char*)s_payload);
+      if (n_status == STATUS_UNKNOWN) {
+        Log.error("MQTT - unknown command: %s", s_payload);
+        return;
+      }
+      c_message a_message = {
+        "mqtt",
+        MSG_COMMAND,
+        &n_status
+      };
+      Log.info("MQTT - command: %s", s_payload);
+      f_handle(a_message);
     }
-    c_message a_message = {
-      "mqtt",
-      MSG_COMMAND,
-      &n_status
-    };
-    Log.info("MQTT - command: %s", s_payload);
-    f_handle(a_message);
   }
-  else if (String(s_topic).endsWith("/config")) {
-    f_getConfig().f_parse(String((char*)s_payload));
+  else if (s_topicString.endsWith("/config")) {
+    SetConfigCommand o_command = SetConfigCommand();
+    o_command.execute((char*)s_payload);
+  }
+  else if (s_topicString.endsWith("/status")) {
+    f_publishStatus();
   }
 }
 
@@ -38,12 +76,7 @@ bool c_mqtt::f_init() {
   c_config& o_config = f_getConfig();
   b_enabled = o_config.a_config.n_protocols & 0b10;
 
-  if (o_client != NULL) {
-    o_client->disconnect();
-    delete o_client;
-    o_client = NULL;
-  }
-
+  f_disconnect();
   if (!b_enabled) {
     Log.info("MQTT - disabled");
     return FALSE;
@@ -51,14 +84,13 @@ bool c_mqtt::f_init() {
   Log.info("MQTT - enabled");
 
   // initialize client
-  o_client = new MQTT(
+  MQTT::f_init(
+    NULL,
     o_config.a_config.n_mqttBrokerIp,
     o_config.a_config.n_mqttBrokerPort,
     o_config.a_config.n_mqttTimeout,
-    c_mqtt::f_callback
+    MQTT_MAX_PACKET_SIZE
   );
-
-  // connect to the server
   return TRUE;
 }
 
@@ -67,46 +99,23 @@ bool c_mqtt::f_connect() {
   if (!WiFi.ready())
     return FALSE;
 
-  if (o_client->isConnected())
+  if (f_isConnected())
     return TRUE;
 
-  if ((millis() - n_lastConnect < N_CONNECT_PERIOD) && n_lastConnect)
-    return FALSE;
-
-  n_lastConnect = millis();
-  const char* s_topicId = f_getTopicId();
+  const char* s_topicId = f_getClientId();
   c_config& o_config = f_getConfig();
 
-  o_client->connect(
+  MQTT::f_connect(
     s_topicId,
     o_config.a_config.s_mqttBrokerUser,
     o_config.a_config.s_mqttBrokerPass
   );
-  if (!o_client->isConnected())
-    return FALSE;
-
-  // (re)subscribe to topics
-  char s_topic[sizeof("garadget//command") + MAXNAMESIZE];
-  sprintf(
-    s_topic,
-    "garadget/%s/command",
-    s_topicId
-  );
-  o_client->subscribe(s_topic);
-  sprintf(
-    s_topic,
-    "garadget/%s/config",
-    s_topicId
-  );
-  o_client->subscribe(s_topic);
-  Log.info("MQTT - connected");
   return TRUE;
 }
 
 void c_mqtt::f_process() {
-  if (!b_enabled) return;
-  f_connect();
-  o_client->loop();
+  if (!b_enabled || !f_connect()) return;
+  MQTT::f_process();
 }
 
 /**
@@ -122,7 +131,7 @@ bool c_mqtt::f_receive(const c_message& a_message) {
 
     // state change - publish
     case MSG_STATUS:
-      f_publishStatus(*(c_doorStatus*)a_message.p_payload);
+      f_publishStatus();
       break;
 
   }
@@ -132,26 +141,33 @@ bool c_mqtt::f_receive(const c_message& a_message) {
 /**
  * Publishes given state to the cloud
  */
-void c_mqtt::f_publishStatus(c_doorStatus n_status) {
-
-  // make sure that device is connected to the broker
-  n_lastConnect = 0;
-  if (!b_enabled || !f_connect())
-    return;
-
-  // subscribe to commands
+void c_mqtt::f_publishStatus() {
   char s_topic[sizeof("garadget//status") + MAXNAMESIZE];
   sprintf(
     s_topic,
     "garadget/%s/status",
-    f_getTopicId()
+    f_getClientId()
   );
-  const char* s_status = c_config::f_statusString(n_status);
-  o_client->publish(s_topic, (uint8_t*)s_status, strlen(s_status), TRUE);
+  char s_status[100];
+  f_getConfig().f_getJsonStatus(s_status);
+  f_publish(s_topic, (uint8_t*)s_status, strlen(s_status), TRUE);
   Log.info("MQTT - published status: %s", s_status);
 }
 
-const char* c_mqtt::f_getTopicId() {
+void c_mqtt::f_publishConfig() {
+  char s_topic[sizeof("garadget//config") + MAXNAMESIZE];
+  sprintf(
+    s_topic,
+    "garadget/%s/status",
+    f_getClientId()
+  );
+  char s_config[n_maxPacketSize - 6];
+  f_getConfig().f_getJsonConfig(s_config);
+  f_publish(s_topic, (uint8_t*)s_config, strlen(s_config), TRUE);
+  Log.info("MQTT - published config: %s", s_config);
+}
+
+const char* c_mqtt::f_getClientId() {
   const char* s_topicId = f_getConfig().a_config.s_deviceName;
   return strlen(s_topicId)
     ? s_topicId

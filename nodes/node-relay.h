@@ -3,7 +3,7 @@
  * @file node-relay.h
  * @brief Implements relay functions
  * @author Denis Grisak
- * @version 1.18
+ * @version 1.19
  */
 // $Log$
 
