@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Soft AP configuration for LAN mode
  * @author Denis Grisak
- * @version 1.19
+ * @version 1.20
  */
 // $Log$
 

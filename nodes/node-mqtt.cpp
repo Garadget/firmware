@@ -3,7 +3,7 @@
  * @file node-mqtt.cpp
  * @brief Implements MQTT client
  * @author Denis Grisak
- * @version 1.19
+ * @version 1.20
  */
 // $Log$
 
@@ -27,11 +27,12 @@ void c_mqtt::f_onConnectHanlder(uint8_t n_result) {
 
   sprintf(
     s_topic,
-    "garadget/%s/config",
+    "garadget/%s/set-config",
     s_topicId
   );
   MQTT::f_subscribe(s_topic, QOS0);
   Log.info("MQTT - subscribed to topic: %s", s_topic);
+
   f_publishStatus();
   f_publishConfig();
   Log.info("MQTT - ready");
@@ -43,10 +44,12 @@ void c_mqtt::f_onReceiveHandler(char* s_topic, uint8_t* s_payload, unsigned int 
 
   Log.info("MQTT - topic: %s, payload: %s", s_topic, s_payload);
   if (s_topicString.endsWith("/command")) {
-    if (!strcmp((char*)s_payload, "get-status"))
+    if (!strcmp((char*)s_payload, "get-status")) {
       f_publishStatus();
-    else if (!strcmp((char*)s_payload, "get-config"))
+    }
+    else if (!strcmp((char*)s_payload, "get-config")) {
       f_publishConfig();
+    }
     else {
       c_doorStatus n_status = c_config::f_statusEnum((char*)s_payload);
       if (n_status == STATUS_UNKNOWN) {
@@ -62,12 +65,9 @@ void c_mqtt::f_onReceiveHandler(char* s_topic, uint8_t* s_payload, unsigned int 
       f_handle(a_message);
     }
   }
-  else if (s_topicString.endsWith("/config")) {
+  else if (s_topicString.endsWith("/set-config")) {
     SetConfigCommand o_command = SetConfigCommand();
     o_command.execute((char*)s_payload);
-  }
-  else if (s_topicString.endsWith("/status")) {
-    f_publishStatus();
   }
 }
 
@@ -142,6 +142,8 @@ bool c_mqtt::f_receive(const c_message& a_message) {
  * Publishes given state to the cloud
  */
 void c_mqtt::f_publishStatus() {
+  if (!b_enabled) return;
+
   char s_topic[sizeof("garadget//status") + MAXNAMESIZE];
   sprintf(
     s_topic,
@@ -155,10 +157,12 @@ void c_mqtt::f_publishStatus() {
 }
 
 void c_mqtt::f_publishConfig() {
+  if (!b_enabled) return;
+
   char s_topic[sizeof("garadget//config") + MAXNAMESIZE];
   sprintf(
     s_topic,
-    "garadget/%s/status",
+    "garadget/%s/config",
     f_getClientId()
   );
   char s_config[n_maxPacketSize - 6];

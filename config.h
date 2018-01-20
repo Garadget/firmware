@@ -3,7 +3,7 @@
  * @file config.h
  * @brief Implements garadget configuration related functionality
  * @author Denis Grisak
- * @version 1.19
+ * @version 1.20
  */
 // $Log$
 

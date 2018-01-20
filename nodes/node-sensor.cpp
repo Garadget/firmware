@@ -3,7 +3,7 @@
  * @file node-sensor.cpp
  * @brief Implements laser sensor
  * @author Denis Grisak
- * @version 1.19
+ * @version 1.20
  */
 // $Log$
 

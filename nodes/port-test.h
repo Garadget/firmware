@@ -3,7 +3,7 @@
  * @file port-test.h
  * @brief Testing Equipment Support
  * @author Denis Grisak
- * @version 1.19
+ * @version 1.20
  */
 // $Log$
 
