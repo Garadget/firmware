@@ -54,7 +54,7 @@ sample code bearing this copyright.
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 // this size is total of [MQTT Header(Max:5byte) + Topic Name Length + Topic Name + Message ID(QoS1|2) + Payload]
-#define MQTT_MAX_PACKET_SIZE 255
+#define MQTT_MAX_PACKET_SIZE 511
 
 // MQTT_n_keepAlive : n_keepAlive interval in Seconds
 #define MQTT_DEFAULT_KEEPALIVE 15
@@ -117,7 +117,7 @@ static const uint8_t S_CONN_3_1_1[7];
 protected:
     TCPClient *o_client = NULL;
     uint8_t *s_buffer;
-    EMQTT_VER n_version = MQTT_3_1;
+    EMQTT_VER n_version = MQTT_3_1_1;
     EMQTT_STATE n_state = STATE_IDLE;
 
     uint16_t n_nextMsgId;

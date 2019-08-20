@@ -16,6 +16,7 @@ const char* c_port::f_getSource() {
 }
 
 bool c_port::f_init() {
+  Log.info("%s - scanning for connected devices", f_getSource());
   Wire.begin();
   uint8_t a_buffer[PORT_BUFFER];
   if (f_busRequest(a_buffer) > 0) {

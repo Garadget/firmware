@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 20
+#define VERSION_MINOR 21
 #define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
@@ -26,6 +26,7 @@
 #define TESTPORT
 
 // antenna mode
+// #define ANT_MODE ANT_AUTO
 // #define ANT_MODE ANT_EXTERNAL
 // #define ANT_MODE ANT_INTERNAL
 

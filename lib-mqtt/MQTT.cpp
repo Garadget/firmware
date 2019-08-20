@@ -53,32 +53,32 @@ bool MQTT::f_connect(const char *s_id, const char *user, const char *pass, const
   if (f_isConnected() || n_state != STATE_IDLE || !f_timerTimeout())
     return false;
 
-  int result = 0;
+  int n_result = 0;
   if (a_ip == NULL) {
     Log.info("MQTT - connecting to %s:%d (version %u)", this->s_domain.c_str(), n_port, n_version);
-    result = o_client->connect(this->s_domain.c_str(), n_port);
+    n_result = o_client->connect(this->s_domain.c_str(), n_port);
   }
   else {
     Log.info("MQTT - connecting to %d.%d.%d.%d:%d (version %u)", a_ip[0], a_ip[1], a_ip[2], a_ip[3], n_port, n_version);
-    result = o_client->connect(a_ip, n_port);
+    n_result = o_client->connect(a_ip, n_port);
   }
 
-  if (!result) {
+  if (!n_result) {
     Log.error("MQTT - connection failed");
     n_state = STATE_REJECTED;
     return false;
   }
 
   n_nextMsgId = 1;
-  const uint8_t* p_conn = MQTT::S_CONN_3_1;
-  if (n_version == MQTT_3_1_1)
-    p_conn = MQTT::S_CONN_3_1_1;
+  const uint8_t* p_conn = MQTT::S_CONN_3_1_1;
+  if (n_version == MQTT_3_1)
+    p_conn = MQTT::S_CONN_3_1;
   uint16_t n_conn = p_conn[1] + 3;
 
   // Leave room in the buffer for header and variable length field
-  uint16_t length = 5;
+  uint16_t n_length = 5;
   for (uint8_t j = 0; j < n_conn; j++)
-    s_buffer[length++] = p_conn[j];
+    s_buffer[n_length++] = p_conn[j];
 
   uint8_t v = willTopic
     ? 0x06 | (willQos << 3) | (willRetain << 5)
@@ -93,22 +93,22 @@ bool MQTT::f_connect(const char *s_id, const char *user, const char *pass, const
       v = v|(0x80>>1);
   }
 
-  s_buffer[length++] = v;
-  s_buffer[length++] = ((n_keepAlive) >> 8);
-  s_buffer[length++] = ((n_keepAlive) & 0xFF);
-  length = f_writeString(s_id, s_buffer, length);
+  s_buffer[n_length++] = v;
+  s_buffer[n_length++] = ((n_keepAlive) >> 8);
+  s_buffer[n_length++] = ((n_keepAlive) & 0xFF);
+  n_length = f_writeString(s_id, s_buffer, n_length);
   if (willTopic) {
-    length = f_writeString(willTopic, s_buffer, length);
-    length = f_writeString(willMessage, s_buffer, length);
+    n_length = f_writeString(willTopic, s_buffer, n_length);
+    n_length = f_writeString(willMessage, s_buffer, n_length);
   }
 
   if (user != NULL) {
-    length = f_writeString(user,s_buffer,length);
+    n_length = f_writeString(user, s_buffer, n_length);
     if (pass != NULL)
-      length = f_writeString(pass,s_buffer,length);
+      n_length = f_writeString(pass, s_buffer, n_length);
   }
 
-  f_write(MQTTCONNECT, s_buffer, length - 5);
+  f_write(MQTTCONNECT, s_buffer, n_length - 5);
   f_timerReset(MQTT_RESPONSE_TIMEOUT);
   n_state = STATE_CONNECTING;
   return true;
@@ -274,7 +274,7 @@ uint16_t MQTT::f_readPacket(uint8_t* lengthLength) {
   s_buffer[len++] = f_readByte();
   bool isPublish = (s_buffer[0] & 0xF0) == MQTTPUBLISH;
   uint32_t multiplier = 1;
-  uint16_t length = 0;
+  uint16_t n_length = 0;
   uint8_t digit = 0;
   uint16_t skip = 0;
   uint8_t start = 0;
@@ -282,7 +282,7 @@ uint16_t MQTT::f_readPacket(uint8_t* lengthLength) {
   do {
     digit = f_readByte();
     s_buffer[len++] = digit;
-    length += (digit & 127) * multiplier;
+    n_length += (digit & 127) * multiplier;
     multiplier *= 128;
   }
   while ((digit & 128) != 0);
@@ -299,7 +299,7 @@ uint16_t MQTT::f_readPacket(uint8_t* lengthLength) {
       skip += 2;
   }
 
-  for (uint16_t i = start;i<length;i++) {
+  for (uint16_t i = start; i < n_length; i++) {
     digit = f_readByte();
     if (len < this->n_maxPacketSize)
         s_buffer[len] = digit;
@@ -376,21 +376,21 @@ bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int
 bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int plength, bool retain, EMQTT_QOS qos, bool dup, uint16_t *messageid) {
     if (f_isConnected()) {
         // Leave room in the s_buffer for header and variable length field
-        uint16_t length = 5;
+        uint16_t n_length = 5;
         memset(s_buffer, 0, this->n_maxPacketSize);
 
-        length = f_writeString(s_topic, s_buffer, length);
+        n_length = f_writeString(s_topic, s_buffer, n_length);
 
         if (qos == QOS2 || qos == QOS1) {
             n_nextMsgId += 1;
-            s_buffer[length++] = (n_nextMsgId >> 8);
-            s_buffer[length++] = (n_nextMsgId & 0xFF);
+            s_buffer[n_length++] = (n_nextMsgId >> 8);
+            s_buffer[n_length++] = (n_nextMsgId & 0xFF);
             if (messageid != NULL)
                 *messageid = n_nextMsgId++;
         }
 
-        for (uint16_t i = 0; i < plength && length < this->n_maxPacketSize; i++) {
-            s_buffer[length++] = a_payload[i];
+        for (uint16_t i = 0; i < plength && n_length < this->n_maxPacketSize; i++) {
+            s_buffer[n_length++] = a_payload[i];
         }
 
         uint8_t header = MQTTPUBLISH;
@@ -409,7 +409,7 @@ bool MQTT::f_publish(const char* s_topic, const uint8_t* a_payload, unsigned int
         else
             header |= MQTTQOS0_HEADER_MASK;
 
-        return f_write(header, s_buffer, length - 5);
+        return f_write(header, s_buffer, n_length - 5);
     }
     return false;
 }
@@ -425,13 +425,13 @@ bool MQTT::f_publishRelease(uint16_t n_messageId) {
   return o_client->write(s_buffer, n_length);
 }
 
-bool MQTT::f_write(uint8_t header, uint8_t* buf, uint16_t length) {
+bool MQTT::f_write(uint8_t header, uint8_t* buf, uint16_t n_length) {
   uint8_t lenBuf[4];
   uint8_t llen = 0;
   uint8_t digit;
   uint8_t pos = 0;
   uint16_t rc;
-  uint16_t len = length;
+  uint16_t len = n_length;
   do {
     digit = len % 128;
     len = len / 128;
@@ -447,8 +447,8 @@ bool MQTT::f_write(uint8_t header, uint8_t* buf, uint16_t length) {
   for (int i = 0; i < llen; i++)
     buf[5 - llen + i] = lenBuf[i];
 
-  rc = o_client->write(buf + (4 - llen), length + 1 + llen);
-  return (rc == 1 + llen + length);
+  rc = o_client->write(buf + (4 - llen), n_length + 1 + llen);
+  return (rc == 1 + llen + n_length);
 }
 
 bool MQTT::f_subscribe(const char* s_topic) {

@@ -11,6 +11,7 @@
  */
 // $Log$
 
+
 #include "application.h"
 #include "global.h"
 #include "config.h"
@@ -24,14 +25,17 @@
   #include "nodes/port-test.h"
 #endif
 
+
 SYSTEM_MODE(MANUAL);
 // SYSTEM_THREAD(ENABLED);
-STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
 
-// Photon module - antenna preference
-#ifdef ANT_MODE
-  STARTUP(WiFi.selectAntenna(ANT_MODE));
-#endif
+STARTUP(
+  softap_set_application_page_handler(f_pageHandler, nullptr);
+  // Photon module - antenna preference
+  #ifdef ANT_MODE
+    STARTUP(WiFi.selectAntenna(ANT_MODE));
+  #endif
+);
 
 #ifdef APPDEBUG
   SerialLogHandler logHandler(
@@ -40,6 +44,7 @@ STARTUP(softap_set_application_page_handler(f_pageHandler, nullptr));
     }
   );
 #endif
+
 c_config& o_config = c_config::f_getInstance();
 c_sensor& o_sensor = c_sensor::f_getInstance();
 c_relay o_relay = c_relay();
