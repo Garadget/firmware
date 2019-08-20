@@ -32,8 +32,9 @@ String `status=%s|time=%u%c|sensor=%u|signal=%d` where
 - `stopped`
 
 ### Variable: doorConfig
-String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d|nme=%s` containing pipe separated value for firmware version and timing parameters (all numeric):
-- `ver` - version, dot separated major and minor (currently 1.7)
+String `sys=%d.%d.%d|ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d|aot=%d|ans=%d|ane=%d|nme=%s` containing pipe separated value for firmware version and timing parameters (all numeric):
+- `ver` - firmware version, dot separated major and minor (e.g 1.15)
+- `sys` - system version, dot separated major, minor, patch (e.g 0.6.2)
 - `rdt` - sensor scan interval in mS (200-60,000, default 1,000)
 - `mtt` - door moving time in mS from completely opened to completely closed (1,000 - 120,000, default 10,000)
 - `rlt` - button press time mS, time for relay to keep contacts closed (10-2,000, default 300)
@@ -46,6 +47,12 @@ String `ver=%d.%d|cnt=%d|rdt=%d|mtt=%d|mot=%d|rlt=%d|rlp=%d|srr=%d|srt=%d|aev=%d
 - `ane` - alert for night time end in minutes from midnight (same value as ans disables, default 360 - 6am)
 - `tzo` - time zone offset or daylight savings time (DST) rule for the region. See details below.
 - `nme` - device name to be used in notifications. At reboot this value will be overwritten with the device name configured in Particle cloud. Update this value to notify the unit about the name change without reboot.
+- `mqon` - MQTT/Cloud enabled flags
+- `mqip` - MQTT server IP address
+- `mqpt` - MQTT server port
+- `mqto` - MQTT server reconnect timeout
+
+The order of the configuration values in the string is not guaranteed.
 
 #### Status alerts bitmap (`aev`)
 Bitmap values for `aev` parameter are:
