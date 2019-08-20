@@ -10,7 +10,7 @@ todo.txt
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
-node_modules/
+src/softap/client-side/node_modules/*
 *.bak
 
 # Windows Installer files
@@ -28,6 +28,7 @@ node_modules/
 
 # OSX
 # =========================
+
 
 .DS_Store
 .AppleDouble
@@ -53,3 +54,6 @@ Temporary Items
 
 firmware
 .vscode
+
+# buld folder
+target/*

@@ -26,7 +26,7 @@ class c_test : public c_port {
       uint32_t n_systemVer;
       uint8_t n_firmwareVerMajor;
       uint8_t n_firmwareVerMinor;
-      uint8_t a_macAddress[6];
+//      uint8_t a_macAddress[6];
     } c_deviceInfo;
 
     union c_bufferInfo {
@@ -59,6 +59,7 @@ class c_test : public c_port {
   protected:
     uint8_t n_ledStep = 0;
     bool b_relay = 0;
+    c_sensor* o_sensor;
 
     void f_nextColor();
     void f_toggleRelay();

@@ -21,6 +21,7 @@ class c_port : public c_node {
     bool f_init();
     void f_process();
 //    bool f_receive(const c_message& a_message);
+    void f_close();
 
   protected:
 
@@ -31,6 +32,10 @@ class c_port : public c_node {
 
     uint8_t a_lastResponse[PORT_BUFFER];
     uint8_t n_lastResponse = 0;
+    PinMode n_savedPinModeSda;
+    PinMode n_savedPinModeScl;
+    boolean b_savedPinLevelSda;
+    boolean b_savedPinLevelScl;
 
     c_timeout o_scanTimer;
     int8_t f_busSend(uint8_t* a_buffer, uint8_t n_length);

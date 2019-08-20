@@ -32,8 +32,14 @@ bool c_sensor::f_init() {
   *n_status = STATUS_OPEN;
 
   // configure hardware
-  pinMode(PIN_LASER, OUTPUT);
-  digitalWrite(PIN_LASER, LOW);
+  #if defined(SWITCH_NO) || defined(SWITCH_NC)
+    // dry contact switch
+    pinMode(PIN_SENSOR, INPUT_PULLUP);
+  #else
+    // laser
+    pinMode(PIN_LASER, OUTPUT);
+    digitalWrite(PIN_LASER, LOW);
+  #endif
 
   // perform the initial scan
   f_getState();
@@ -51,29 +57,34 @@ void c_sensor::f_process() {
 
 uint8_t c_sensor::f_read() {
 
-  uint32_t
-    n_sumBase = 0,
-    n_sumScan = 0;
+  #if defined(SWITCH_NO)
+    *n_reflection = digitalRead(PIN_SENSOR) ? 0 : 100;
+  #elif defined(SWITCH_NC)
+    *n_reflection = digitalRead(PIN_SENSOR) ? 100 : 0;
+  #else
+    uint32_t
+      n_sumBase = 0,
+      n_sumScan = 0;
 
-  for (uint8_t n_read = SENSOR_READS; n_read > 0; n_read--) {
-    *n_base = analogRead(PIN_PHOTO);
-    n_sumBase += *n_base - SENSOR_BIAS;
-    digitalWriteFast(PIN_LASER, HIGH);
-    delay(1);
-    n_sumScan += *n_base - analogRead(PIN_PHOTO);
-    digitalWriteFast(PIN_LASER, LOW);
-    delay(1);
-  }
+    for (uint8_t n_read = SENSOR_READS; n_read > 0; n_read--) {
+      *n_base = analogRead(PIN_PHOTO);
+      n_sumBase += *n_base - SENSOR_BIAS;
+      digitalWriteFast(PIN_LASER, HIGH);
+      delay(1);
+      n_sumScan += *n_base - analogRead(PIN_PHOTO);
+      digitalWriteFast(PIN_LASER, LOW);
+      delay(1);
+    }
 
-  // scan valid - recalculate the reflection
-  if (n_sumBase && n_sumScan <= n_sumBase)
-    *n_reflection = n_sumScan * 100 / n_sumBase;
-
+    // scan valid - recalculate the reflection
+    if (n_sumBase && n_sumScan <= n_sumBase)
+      *n_reflection = n_sumScan * 100 / n_sumBase;
+  #endif
   return *n_reflection;
 }
 
 bool c_sensor::f_isTripping() {
-  return (f_read() > *n_threshold);
+    return (f_read() > *n_threshold);
 }
 
 uint16_t c_sensor::f_getBase() {
