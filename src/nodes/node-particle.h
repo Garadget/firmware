@@ -7,8 +7,8 @@
  */
 // $Log$
 
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#ifndef NODE_PARTICLE_H
+#define NODE_PARTICLE_H
 
 // Particle platform - product settings
 #ifdef ORGMODE

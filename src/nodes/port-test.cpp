@@ -17,6 +17,7 @@ bool c_test::f_init() {
   n_address = 0x11;
   if (!c_port::f_init())
     return FALSE;
+  o_sensor = &c_sensor::f_getInstance();
 
   Particle.disconnect();
   RGB.control(true);
@@ -37,6 +38,10 @@ bool c_test::f_init() {
       f_sendState();
       Particle.connect();
       WiFi.listen();
+      #if defined(SWITCH_NO) || defined(SWITCH_NC)
+        f_close();
+        return true;
+      #endif
       break;
     }
     delay(200);
@@ -55,7 +60,7 @@ void c_test::f_sendInfo() {
   a_data.a_fields.n_systemVer = System.versionNumber();
   a_data.a_fields.n_firmwareVerMajor = VERSION_MAJOR;
   a_data.a_fields.n_firmwareVerMinor = VERSION_MINOR;
-  WiFi.macAddress(a_data.a_fields.a_macAddress);
+//  WiFi.macAddress(a_data.a_fields.a_macAddress);
   f_busSend(
     a_data.a_bytes,
     sizeof(c_bufferInfo)
@@ -75,11 +80,14 @@ void c_test::f_sendState() {
     c_bufferState a_data;
     a_data.a_fields.n_type = 'S';
 
-    c_sensor& o_sensor = c_sensor::f_getInstance();
-
     // get laser sensor data
-    a_data.a_fields.n_sensorRate = o_sensor.f_read();
-    a_data.a_fields.n_sensorBase = o_sensor.f_getBase();
+    #if defined(SWITCH_NO) || defined(SWITCH_NC)
+      a_data.a_fields.n_sensorRate = 100;
+      a_data.a_fields.n_sensorBase = analogRead(PIN_PHOTO);
+    #else
+      a_data.a_fields.n_sensorRate = o_sensor->f_read();
+      a_data.a_fields.n_sensorBase = o_sensor->f_getBase();
+    #endif
     a_data.a_fields.n_radioSignal = WiFi.RSSI();
     a_data.a_fields.n_buttonPushed = System.buttonPushed();
     a_data.a_fields.n_ledStep = n_ledStep;

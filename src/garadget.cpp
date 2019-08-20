@@ -30,11 +30,11 @@ SYSTEM_MODE(MANUAL);
 // SYSTEM_THREAD(ENABLED);
 
 STARTUP(
-  softap_set_application_page_handler(f_pageHandler, nullptr);
   // Photon module - antenna preference
   #ifdef ANT_MODE
-    STARTUP(WiFi.selectAntenna(ANT_MODE));
+    WiFi.selectAntenna(ANT_MODE);
   #endif
+  softap_set_application_page_handler(f_pageHandler, nullptr);
 );
 
 #ifdef APPDEBUG

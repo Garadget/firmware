@@ -26,7 +26,7 @@
 #define TESTPORT
 
 // antenna mode
-// #define ANT_MODE ANT_AUTO
+#define ANT_MODE ANT_AUTO
 // #define ANT_MODE ANT_EXTERNAL
 // #define ANT_MODE ANT_INTERNAL
 
@@ -41,11 +41,13 @@
 
 // pin assignments
 #define PIN_SENSOR D0
+#define PIN_LASER D2
 #define PIN_RELAY D3
+#define PIN_PHOTO A0
 
 // use dry contact switch sensor instead of larer 
-// #define SWITCH_NO // Normally Open - (connects when door is closed)
-// #define SWITCH_NC // Normally Closed (disconnects when door is closed)
+// #define SWITCH_NO // Normally Open (connects when door is closed)
+#define SWITCH_NC // Normally Closed (disconnects when door is closed)
 
 // garadget own address - first
 #define PORT_ADDRESS 0x10

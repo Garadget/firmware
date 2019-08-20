@@ -8,7 +8,7 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include "Particle.h"
+#include "application.h"
 #include "softap_http.h"
 #include "config.h"
 #include <jsmn.h>

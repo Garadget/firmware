@@ -17,6 +17,10 @@ const char* c_port::f_getSource() {
 
 bool c_port::f_init() {
   Log.info("%s - scanning for connected devices", f_getSource());
+  n_savedPinModeSda = getPinMode(SDA);
+  b_savedPinLevelSda = digitalRead(SDA);
+  n_savedPinModeScl = getPinMode(SCL);
+  b_savedPinLevelScl = digitalRead(SCL);
   Wire.begin();
   uint8_t a_buffer[PORT_BUFFER];
   if (f_busRequest(a_buffer) > 0) {
@@ -25,8 +29,9 @@ bool c_port::f_init() {
     c_port::n_devices++;
     Log.info("%s - device connected", f_getSource());
   }
-  if (!c_port::n_devices)
-    Wire.end();
+  if (!c_port::n_devices) {
+    f_close();
+  }
   return b_enabled;
 }
 
@@ -87,4 +92,12 @@ int8_t c_port::f_busRequest(uint8_t* a_buffer, uint8_t n_maxLength) {
   for (; Wire.available() && n_length < n_maxLength; n_length++)
     a_buffer[n_length] = Wire.read();
   return n_length;
+}
+
+void c_port::f_close() {
+    Wire.end();
+    pinMode(SDA, n_savedPinModeSda);
+    digitalWrite(SDA, b_savedPinLevelSda);
+    pinMode(SCL, n_savedPinModeScl);
+    digitalWrite(SCL, b_savedPinLevelScl);
 }

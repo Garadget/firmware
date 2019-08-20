@@ -11,8 +11,8 @@
 #define MQTT_H
 
 #include "node.h"
-#include "command.h"
-#include "lib-mqtt/MQTT.h"
+#include "../command.h"
+#include "../lib/MQTT.h"
 
 class c_mqtt : public c_node, public MQTT {
 
