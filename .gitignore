@@ -10,7 +10,8 @@ todo.txt
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
-node_modules/*
+softap/client-side/node_modules/*
+*.bak
 
 # Windows Installer files
 *.cab
@@ -50,3 +51,6 @@ node_modules/*
 Network Trash Folder
 Temporary Items
 .apdisk
+
+firmware
+.vscode

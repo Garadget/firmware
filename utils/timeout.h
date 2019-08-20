@@ -3,7 +3,7 @@
  * @file timeout.h
  * @brief Provides timer related functions to facilitate non-breaking delays
  * @author Denis Grisak
- * @version 1.0
+ * @version 1.20
  */
 // $Log$
 
@@ -15,8 +15,9 @@
 class c_timeout {
 
   protected:
-    uint16_t n_duration = 0;
-    uint16_t *p_duration;
+    uint32_t n_durationLong = 0;
+    uint16_t *p_durationShort = NULL;
+    uint32_t *p_durationLong = NULL;
     uint32_t n_timerStart;
     uint32_t n_timerEnd;
     boolean b_running = FALSE;
@@ -25,31 +26,39 @@ class c_timeout {
 
 /**
  * Timeout constructor
- * @param[in] uint16_t n_initialDuration Optional initial timer duration in millisecods
+ * @param[in] uint32_t n_initialDuration Optional initial timer duration in millisecods
  */
-    c_timeout(uint16_t n_initialDuration = 0);
+    c_timeout(uint32_t n_initialDuration = 0);
 
 /**
  * Timeout constructor
- * @param[in] uint16_t* p_newDuration Pointer to variable containing timer duraction in
+ * @param[in] uint32_t* p_duration Pointer to variable containing timer duraction in
  *  milliseconds
  */
-    c_timeout(uint16_t* p_newDuration);
+    c_timeout(uint32_t* p_duration);
 
 /**
  * Sets duration for the timeout. The duration is preserved across the timer
  *  runs until changed.
- * @param[in] uint16_t n_newDuration Timer duration in milliseconds
+ * @param[in] uint32_t n_duration Timer duration in milliseconds
  */
-    void f_setDuration(uint16_t n_newDuration);
+    void f_setDuration(uint32_t n_duration);
 
 /**
  * References external timer duration variable. This is useful when duration
  *  parameter is stored in external configuration structure
- * @param[in] uint16_t* p_newDuration Pointer to variable containing timer duraction in
+ * @param[in] uint32_t* p_duration Pointer to variable containing timer duraction in
  *  milliseconds
  */
-    void f_setDuration(uint16_t *p_newDuration);
+    void f_setDuration(uint32_t *p_duration);
+
+/**
+ * References external timer duration variable. This is useful when duration
+ *  parameter is stored in external configuration structure
+ * @param[in] uint16_t* p_duration Pointer to variable containing timer duraction in
+ *  milliseconds
+ */
+    void f_setDuration(uint16_t *p_duration);
 
 /**
  * Starts or re-starts the timer
@@ -58,7 +67,7 @@ class c_timeout {
 
 /**
  * Cancels the timer without generating any events
- * @param[in] p_newDuration Pointer to variable containing timer duraction in
+ * @param[in] p_duration Pointer to variable containing timer duraction in
  *  milliseconds
  * @return Description of returned value.
  */
