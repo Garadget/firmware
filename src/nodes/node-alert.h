@@ -3,7 +3,7 @@
  * @file node-alert.h
  * @brief Implements alerts
  * @author Denis Grisak
- * @version 1.20
+ * @version 1.22
  */
 // $Log$
 

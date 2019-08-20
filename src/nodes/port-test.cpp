@@ -3,7 +3,7 @@
 * @file port-test.cpp
 * @brief Implements manufacturing test procedures
 * @author Denis Grisak
-* @version 1.20
+* @version 1.22
 */
 // $Log$
 

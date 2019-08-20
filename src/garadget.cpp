@@ -2,7 +2,7 @@
 /**
  * @file application.ino
  * @brief Garadget main file
- * @version 1.20
+ * @version 1.22
  * @author Denis Grisak
  * @license GPL v3
 

@@ -6,7 +6,7 @@
 
 // firmware version for EEPROM data integrity check
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 21
+#define VERSION_MINOR 22
 #define VERSION_ID VERSION_MAJOR * 100 + VERSION_MINOR
 
 // earliest firmware version not requiring the EEPROM reset
@@ -47,7 +47,7 @@
 
 // use dry contact switch sensor instead of larer 
 // #define SWITCH_NO // Normally Open (connects when door is closed)
-#define SWITCH_NC // Normally Closed (disconnects when door is closed)
+// #define SWITCH_NC // Normally Closed (disconnects when door is closed)
 
 // garadget own address - first
 #define PORT_ADDRESS 0x10

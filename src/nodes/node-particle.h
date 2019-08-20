@@ -3,7 +3,7 @@
  * @file node-particle.h
  * @brief Implements Particle cloud interface
  * @author Denis Grisak
- * @version 1.20
+ * @version 1.22
  */
 // $Log$
 

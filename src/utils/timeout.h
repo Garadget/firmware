@@ -3,7 +3,7 @@
  * @file timeout.h
  * @brief Provides timer related functions to facilitate non-breaking delays
  * @author Denis Grisak
- * @version 1.20
+ * @version 1.22
  */
 // $Log$
 
