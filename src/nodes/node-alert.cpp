@@ -3,7 +3,7 @@
  * @file node-alert.cpp
  * @brief Implements alerts functionality
  * @author Denis Grisak
- * @version 1.22
+ * @version 1.24
  */
 // $Log$
 
@@ -95,7 +95,7 @@ void c_alert::f_timeoutAlert() {
  * Handle night time open door alert
  */
 void c_alert::f_nightAlert() {
-  char s_time[10];
+  char s_time[12];
   sprintf(s_time, "%u-%u", *n_nightStart, *n_nightEnd);
   f_fireAlert("night", s_time);
   n_nightAlertsFired = 1;

@@ -3,7 +3,7 @@
  * @file node.h
  * @brief Abstract class for node implementations
  * @author Denis Grisak
- * @version 1.22
+ * @version 1.24
  */
 // $Log$
 

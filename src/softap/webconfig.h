@@ -3,7 +3,7 @@
  * @file door.h
  * @brief Soft AP configuration for LAN mode
  * @author Denis Grisak
- * @version 1.22
+ * @version 1.24
  */
 // $Log$
 
@@ -12,8 +12,8 @@
 
 #include "Particle.h"
 #include "softap_http.h"
-#include "command.h"
-#include "config.h"
+#include "../command.h"
+#include "../config.h"
 
 struct c_page {
     const char* url;

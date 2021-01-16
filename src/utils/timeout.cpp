@@ -3,7 +3,7 @@
  * @file timeout.cpp
  * @brief Provides timer related functions to facilitate non-breaking delays
  * @author Denis Grisak
- * @version 1.22
+ * @version 1.24
  */
 // $Log$
 

@@ -3,7 +3,7 @@
  * @file node-sensor.h
  * @brief Implements laser sensor
  * @author Denis Grisak
- * @version 1.22
+ * @version 1.24
  */
 // $Log$
 

@@ -3,7 +3,7 @@
 * @file config.cpp
 * @brief Implements garadget configuration related functionality
 * @author Denis Grisak
-* @version 1.22
+* @version 1.24
 */
 // $Log$
 
