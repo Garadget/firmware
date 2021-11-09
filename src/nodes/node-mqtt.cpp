@@ -108,7 +108,7 @@ bool c_mqtt::f_connect() {
   char s_topic[sizeof("garadget//status") + MAXNAMESIZE];
   sprintf(
     s_topic,
-    "garadget/%s/status",
+    "garadget/%s/LWT",
     f_getClientId()
   );
 
@@ -119,9 +119,11 @@ bool c_mqtt::f_connect() {
     s_topic,
     QOS0,
     true,
-    "offline",
+    "Offline",
     true
   );
+  f_publish(s_topic, "Online" , QOS0, TRUE, NULL);
+  
   return TRUE;
 }
 
