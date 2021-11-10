@@ -109,6 +109,9 @@ Example JSON: `{"name": "Home", "type": "night", "data": "1320-360"}`
 Published when device configuration is updated, parameter is the updated configuration string.
 Example JSON: `{"name": "Home", "type": "config", "data": "ans=1320|ane=360|tzo=-7.0"}`
 
+#### LWT
+Publishes on "Online" and "Offline" on connect and disconnect from the broker. Published on channel /LWT 
+
 ## Developer Resources
 - [Garadget Community Forum](http://community.garadget.com/) - post your questions, ideas and requests.
 - [Particle Build](https://build.particle.io/build/new) - web based development environment. Edit, compile and upload your new code wirelessly.
