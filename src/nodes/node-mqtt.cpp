@@ -105,7 +105,7 @@ bool c_mqtt::f_connect() {
   const char* s_topicId = f_getClientId();
   c_config& o_config = f_getConfig();
 
-  char s_topic[sizeof("garadget//status") + MAXNAMESIZE];
+  char s_topic[sizeof("garadget//LWT") + MAXNAMESIZE];
   sprintf(
     s_topic,
     "garadget/%s/LWT",
