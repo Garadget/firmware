@@ -122,7 +122,7 @@ bool c_mqtt::f_connect() {
     "Offline",
     true
   );
-  f_publish(s_topic, "Online" , QOS0, TRUE, NULL);
+  f_publish(s_topic, (uint8_t*)"Online", strlen("Online"), TRUE);
   
   return TRUE;
 }
