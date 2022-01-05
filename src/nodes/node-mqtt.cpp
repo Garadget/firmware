@@ -105,11 +105,25 @@ bool c_mqtt::f_connect() {
   const char* s_topicId = f_getClientId();
   c_config& o_config = f_getConfig();
 
+  char s_topic[sizeof("garadget//LWT") + MAXNAMESIZE];
+  sprintf(
+    s_topic,
+    "garadget/%s/LWT",
+    f_getClientId()
+  );
+
   MQTT::f_connect(
     s_topicId,
     o_config.a_config.s_mqttBrokerUser,
-    o_config.a_config.s_mqttBrokerPass
+    o_config.a_config.s_mqttBrokerPass,
+    s_topic,
+    QOS0,
+    true,
+    "Offline",
+    true
   );
+  f_publish(s_topic, (uint8_t*)"Online", strlen("Online"), TRUE);
+  
   return TRUE;
 }
 
