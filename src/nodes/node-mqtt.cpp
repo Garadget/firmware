@@ -50,6 +50,9 @@ void c_mqtt::f_onReceiveHandler(char* s_topic, uint8_t* s_payload, unsigned int 
     else if (!strcmp((char*)s_payload, "get-config")) {
       f_publishConfig();
     }
+    else if (!strcmp((char*)s_payload, "reboot")) {
+      System.reset();
+    }
     else {
       c_doorStatus n_status = c_config::f_statusEnum((char*)s_payload);
       if (n_status == STATUS_UNKNOWN) {
